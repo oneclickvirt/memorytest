@@ -117,10 +117,10 @@ func SysBenchTest(language string) string {
 		testWriteSpeedStr := strconv.FormatFloat(testWriteSpeed, 'f', 2, 64)
 		if testWriteOps > 1000 {
 			testWriteOpsStr := strconv.FormatFloat(testWriteOps/1000.0, 'f', 2, 64)
-			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + "K IOPS)\n"
+			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + "K IOPS, 5s)\n"
 		} else {
 			testWriteOpsStr := strconv.FormatFloat(testWriteOps, 'f', 0, 64)
-			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS)\n"
+			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS, 5s)\n"
 		}
 		if mibReadFlag {
 			testReadSpeed = testReadSpeed / 1048576.0 * 1000000.0
@@ -133,10 +133,10 @@ func SysBenchTest(language string) string {
 		testReadSpeedStr := strconv.FormatFloat(testReadSpeed, 'f', 2, 64)
 		if testReadOps > 1000 {
 			testReadOpsStr := strconv.FormatFloat(testReadOps/1000.0, 'f', 2, 64)
-			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + "K IOPS)\n"
+			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + "K IOPS, 5s)\n"
 		} else {
 			testReadOpsStr := strconv.FormatFloat(testReadOps, 'f', 0, 64)
-			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS)\n"
+			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS, 5s)\n"
 		}
 	} else {
 		return ""
