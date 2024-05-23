@@ -37,6 +37,7 @@ func runSysBenchCommand(numThreads, oper, maxTime, version string) (string, erro
 }
 
 // SysBenchTest 使用 sysbench 进行内存测试
+// https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
 func SysBenchTest(language string) string {
 	var result string
 	comCheck := exec.Command("sysbench", "--version")
@@ -48,42 +49,81 @@ func SysBenchTest(language string) string {
 			testReadOps, testReadSpeed, testWriteOps, testWriteSpeed float64
 			mibReadFlag, mibWriteFlag                                bool
 		)
-
-		// 需要测试两次取平均值
-
-		// 读测试
-		readResult, err := runSysBenchCommand("1", "read", "5", version)
-		if err != nil {
-			fmt.Printf("Error running read test: %v\n", strings.TrimSpace(readResult))
-		} else {
-			tempList := strings.Split(readResult, "\n")
-			if len(tempList) > 0 {
-				// https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
-				for _, line := range tempList {
-					if strings.Contains(line, "total size") {
-						totalSize = strings.TrimSpace(strings.Split(line, ":")[1])
-						if strings.Contains(totalSize, "MiB") {
-							mibReadFlag = true
-						}
-					} else if strings.Contains(line, "per second") || strings.Contains(line, "ops/sec") {
-						temp1 := strings.Split(line, "(")
-						if len(temp1) == 2 {
-							temp2 := strings.Split(temp1[1], " ")
-							if len(temp2) >= 2 {
-								value, err := strconv.ParseFloat(temp2[0], 64)
-								if err == nil {
-									testReadOps += value
+		// 测试两次取平均值
+		for count := 0; count < 2; count++ {
+			// 读测试
+			readResult, err := runSysBenchCommand("1", "read", "5", version)
+			if err != nil {
+				fmt.Printf("Error running read test: %v\n", strings.TrimSpace(readResult))
+			} else {
+				tempList := strings.Split(readResult, "\n")
+				if len(tempList) > 0 {
+					for _, line := range tempList {
+						if strings.Contains(line, "total size") {
+							totalSize = strings.TrimSpace(strings.Split(line, ":")[1])
+							if strings.Contains(totalSize, "MiB") {
+								mibReadFlag = true
+							}
+						} else if strings.Contains(line, "per second") || strings.Contains(line, "ops/sec") {
+							temp1 := strings.Split(line, "(")
+							if len(temp1) == 2 {
+								temp2 := strings.Split(strings.TrimSpace(temp1[1]), " ")
+								if len(temp2) >= 2 {
+									value, err := strconv.ParseFloat(strings.TrimSpace(temp2[0]), 64)
+									if err == nil {
+										testReadOps += value
+									}
+								}
+							}
+						} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
+							temp1 := strings.Split(line, "(")
+							if len(temp1) == 2 {
+								temp2 := strings.Split(strings.TrimSpace(temp1[1]), " ")
+								if len(temp2) >= 2 {
+									value, err := strconv.ParseFloat(strings.TrimSpace(temp2[0]), 64)
+									if err == nil {
+										testReadSpeed += value
+									}
 								}
 							}
 						}
-					} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
-						temp1 := strings.Split(line, "(")
-						if len(temp1) == 2 {
-							temp2 := strings.Split(temp1[1], " ")
-							if len(temp2) >= 2 {
-								value, err := strconv.ParseFloat(temp2[0], 64)
-								if err == nil {
-									testReadSpeed += value
+					}
+				}
+			}
+			// 写测试
+			writeResult, err := runSysBenchCommand("1", "write", "5", version)
+			if err != nil {
+				fmt.Printf("Error running write test: %v\n", strings.TrimSpace(writeResult))
+			} else {
+				tempList := strings.Split(readResult, "\n")
+				if len(tempList) > 0 {
+					// https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
+					for _, line := range tempList {
+						if strings.Contains(line, "total size") {
+							totalSize = strings.TrimSpace(strings.Split(line, ":")[1])
+							if strings.Contains(totalSize, "MiB") {
+								mibWriteFlag = true
+							}
+						} else if strings.Contains(line, "per second") || strings.Contains(line, "ops/sec") {
+							temp1 := strings.Split(line, "(")
+							if len(temp1) == 2 {
+								temp2 := strings.Split(temp1[1], " ")
+								if len(temp2) >= 2 {
+									value, err := strconv.ParseFloat(strings.TrimSpace(temp2[0]), 64)
+									if err == nil {
+										testWriteOps += value
+									}
+								}
+							}
+						} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
+							temp1 := strings.Split(line, "(")
+							if len(temp1) == 2 {
+								temp2 := strings.Split(strings.TrimSpace(temp1[1]), " ")
+								if len(temp2) >= 2 {
+									value, err := strconv.ParseFloat(strings.TrimSpace(temp2[0]), 64)
+									if err == nil {
+										testWriteSpeed += value
+									}
 								}
 							}
 						}
@@ -91,8 +131,9 @@ func SysBenchTest(language string) string {
 				}
 			}
 		}
+		// 计算和匹配格式
 		if mibReadFlag {
-			testReadSpeed = testReadSpeed / (1048576.0 * 1000000.0)
+			testReadSpeed = testReadSpeed / 2.0 / 1048576.0 * 1000000.0
 		}
 		if language == "en" {
 			result += "  Single Read Speed: "
@@ -100,50 +141,15 @@ func SysBenchTest(language string) string {
 			result += "  单线程读速度: "
 		}
 		testReadSpeedStr := strconv.FormatFloat(testReadSpeed, 'f', 2, 64)
-		testReadOpsStr := strconv.FormatFloat(testReadOps, 'f', 2, 64)
-		result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS)\n"
-		// 写测试
-		writeResult, err := runSysBenchCommand("1", "write", "5", version)
-		if err != nil {
-			fmt.Printf("Error running write test: %v\n", strings.TrimSpace(writeResult))
+		if testReadOps > 1000 {
+			testReadOpsStr := strconv.FormatFloat(testReadOps/1000.0, 'f', 2, 64)
+			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + "K IOPS)\n"
 		} else {
-			tempList := strings.Split(readResult, "\n")
-			if len(tempList) > 0 {
-				// https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
-				for _, line := range tempList {
-					if strings.Contains(line, "total size") {
-						totalSize = strings.TrimSpace(strings.Split(line, ":")[1])
-						if strings.Contains(totalSize, "MiB") {
-							mibWriteFlag = true
-						}
-					} else if strings.Contains(line, "per second") || strings.Contains(line, "ops/sec") {
-						temp1 := strings.Split(line, "(")
-						if len(temp1) == 2 {
-							temp2 := strings.Split(temp1[1], " ")
-							if len(temp2) >= 2 {
-								value, err := strconv.ParseFloat(temp2[0], 64)
-								if err == nil {
-									testWriteOps += value
-								}
-							}
-						}
-					} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
-						temp1 := strings.Split(line, "(")
-						if len(temp1) == 2 {
-							temp2 := strings.Split(temp1[1], " ")
-							if len(temp2) >= 2 {
-								value, err := strconv.ParseFloat(temp2[0], 64)
-								if err == nil {
-									testWriteSpeed += value
-								}
-							}
-						}
-					}
-				}
-			}
+			testReadOpsStr := strconv.FormatFloat(testReadOps, 'f', 0, 64)
+			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS)\n"
 		}
 		if mibWriteFlag {
-			testWriteSpeed = testWriteSpeed / (1048576 * 1000000)
+			testWriteSpeed = testWriteSpeed / 2.0 / 1048576 * 1000000
 		}
 		if language == "en" {
 			result += "  Single Write Speed: "
@@ -151,8 +157,13 @@ func SysBenchTest(language string) string {
 			result += "  单线程写速度: "
 		}
 		testWriteSpeedStr := strconv.FormatFloat(testWriteSpeed, 'f', 2, 64)
-		testWriteOpsStr := strconv.FormatFloat(testWriteOps, 'f', 2, 64)
-		result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS)\n"
+		if testWriteOps > 1000 {
+			testWriteOpsStr := strconv.FormatFloat(testWriteOps/1000.0, 'f', 2, 64)
+			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + "K IOPS)\n"
+		} else {
+			testWriteOpsStr := strconv.FormatFloat(testWriteOps, 'f', 0, 64)
+			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS)\n"
+		}
 	} else {
 		return ""
 	}
