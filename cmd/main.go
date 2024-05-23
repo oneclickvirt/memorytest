@@ -5,6 +5,7 @@ import (
 	"flag"
 	"net/http"
 	"runtime"
+	. "github.com/oneclickvirt/memoryTest/defaultset"
 	"github.com/oneclickvirt/memoryTest/memorytest"
 )
 
