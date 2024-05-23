@@ -250,7 +250,26 @@ func DDTest(language string) string {
 }
 
 // WinsatTest 通过 winsat 测试内存读写
+// winsat mem
 func WinsatTest(language string) string {
 	var result string
+	cmd := exec.Command("winsat", "mem")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	} else {
+		tempList := strings.Split(string(output), "\n")
+		for _, l := range tempList {
+			if strings.Contains(l, "> 内存性能") {
+				tempText := strings.TrimSpace(strings.ReplaceAll(l, "> 内存性能", ""))
+				if language == "en" {
+					result += "  Memory Performance: "
+				} else {
+					result += "  内存性能: "
+				}
+				result += tempText + "\n"
+			}
+		}
+	}
 	return result
 }
