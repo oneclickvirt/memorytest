@@ -69,7 +69,7 @@ func SysBenchTest(language string) string {
                             if len(temp2) >= 2 {
                                 value, err := strconv.ParseFloat(strings.TrimSpace(temp2[0]), 64)
                                 if err == nil {
-                                    ops += value
+                                    ops = value
                                 }
                             }
                         }
@@ -80,7 +80,7 @@ func SysBenchTest(language string) string {
                             if len(temp2) >= 2 {
                                 value, err := strconv.ParseFloat(strings.TrimSpace(temp2[0]), 64)
                                 if err == nil {
-                                    speed += value
+                                    speed = value
                                 }
                             }
                         }
