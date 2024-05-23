@@ -34,7 +34,8 @@ func main() {
 		if testMethod == "sysbench" {
 			res = memorytest.SysBenchTest(language)
 			if res == "" {
-				res = memorytest.DDTest(language)
+				res = "sysbench test failed, switch to use dd test.\n"
+				res += memorytest.DDTest(language)
 			}
 		} else if testMethod == "dd" {
 			res = memorytest.DDTest(language)
