@@ -145,7 +145,7 @@ func SysBenchTest(language string) string {
 			testReadOpsStr := strconv.FormatFloat(testReadOps/1000.0, 'f', 2, 64)
 			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + "K IOPS)\n"
 		} else {
-			testReadOpsStr := strconv.FormatFloat(testReadOps, 'f', 0, 64)
+			testReadOpsStr := strconv.FormatFloat(testReadOps/2.0, 'f', 0, 64)
 			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS)\n"
 		}
 		if mibWriteFlag {
@@ -161,7 +161,7 @@ func SysBenchTest(language string) string {
 			testWriteOpsStr := strconv.FormatFloat(testWriteOps/1000.0, 'f', 2, 64)
 			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + "K IOPS)\n"
 		} else {
-			testWriteOpsStr := strconv.FormatFloat(testWriteOps, 'f', 0, 64)
+			testWriteOpsStr := strconv.FormatFloat(testWriteOps/2.0, 'f', 0, 64)
 			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS)\n"
 		}
 	} else {
