@@ -95,7 +95,6 @@ func SysBenchTest(language string) string {
 		} else {
 			tempList := strings.Split(readResult, "\n")
 			if len(tempList) > 0 {
-				// https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
 				for _, line := range tempList {
 					if strings.Contains(line, "total size") {
 						totalSize = strings.TrimSpace(strings.Split(line, ":")[1])
@@ -133,9 +132,9 @@ func SysBenchTest(language string) string {
 			testReadSpeed = testReadSpeed / 1048576.0 * 1000000.0
 		}
 		if language == "en" {
-			result += "  Single Read Speed: "
+			result += "  Single Seq Read Speed: "
 		} else {
-			result += "  单线程读速度: "
+			result += "  单线程顺序读速度: "
 		}
 		testReadSpeedStr := strconv.FormatFloat(testReadSpeed, 'f', 2, 64)
 		if testReadOps > 1000 {
@@ -149,9 +148,9 @@ func SysBenchTest(language string) string {
 			testWriteSpeed = testWriteSpeed / 1048576 * 1000000
 		}
 		if language == "en" {
-			result += "  Single Write Speed: "
+			result += "  Single Seq Write Speed: "
 		} else {
-			result += "  单线程写速度: "
+			result += "  单线程顺序写速度: "
 		}
 		testWriteSpeedStr := strconv.FormatFloat(testWriteSpeed, 'f', 2, 64)
 		if testWriteOps > 1000 {
