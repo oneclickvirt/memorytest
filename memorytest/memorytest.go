@@ -33,21 +33,44 @@ func SysBenchMemoryTest() string {
 	output, err := comCheck.CombinedOutput()
 	if err == nil {
 		version := string(output)
-		fmt.Println("Running read test...")
 		readResult, err := runSysBenchCommand("1", "read", "5", version)
 		if err != nil {
-			fmt.Printf("Error running read test: %v\n", err)
-			fmt.Println(readResult)
+			fmt.Printf("Error running read test: %v\n", strings.TrimSpace(readResult))
 		} else {
-			fmt.Println("Read test result:")
+			tempList := strings.Split(readResult, "\n")
+			if len(tempList) > 0 {
+				// https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
+				for _, line := range tempList {
+					var totalSize, testScore, testSpeed string
+					if strings.Contains(line, "total size") {
+						totalSize = strings.TrimSpace(strings.Split(line, ":")[1])
+					} else if strings.Contains(line, "per second") || strings.Contains(line, "ops/sec") {
+						temp1 := strings.Split(line, "(")
+						if len(temp1) == 2 {
+							temp2 := strings.Split(temp1[1], " ")
+							if len(temp2) >= 2 {
+								testScore = temp2[0]
+							}
+						}
+					} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
+						temp1 := strings.Split(line, "(")
+						if len(temp1) == 2 {
+							temp2 := strings.Split(temp1[1], " ")
+							if len(temp2) >= 2 {
+								testSpeed = temp2[0]
+							}
+						}
+					}
+					fmt.Println(totalSize, testScore, testSpeed)
+				}
+			}
 			fmt.Println(readResult)
 		}
 		fmt.Println("Running write test...")
 		writeResult, err := runSysBenchCommand("1", "write", "5", version)
 		if err != nil {
-			fmt.Printf("Error running write test: %v\n", err)
+			fmt.Printf("Error running write test: %v\n", strings.TrimSpace(writeResult))
 		} else {
-			fmt.Println("Write test result:")
 			fmt.Println(writeResult)
 		}
 	}
