@@ -142,11 +142,13 @@ func SysBenchTest(language string) string {
 	return result
 }
 
+// DDTest 通过 dd 测试内存读写
 func DDTest(language string) string {
 	var result string
 	return result
 }
 
+// WinsatTest 通过 winsat 测试内存读写 
 func WinsatTest(language string) string {
 	var result string
 	return result
