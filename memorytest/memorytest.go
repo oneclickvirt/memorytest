@@ -147,6 +147,10 @@ func SysBenchTest(language string) string {
 }
 
 // DDTest 通过 dd 测试内存读写
+// 写测试
+// dd if=/dev/zero of=testfile bs=1M count=1024 conv=fdatasync
+// 读测试
+// dd if=testfile of=/dev/null bs=1M count=1024
 func DDTest(language string) string {
 	var result string
 	return result
