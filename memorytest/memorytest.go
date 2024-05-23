@@ -46,6 +46,8 @@ func SysBenchMemoryTest(language string) string {
 			mibReadFlag, mibWriteFlag bool
 		)
 
+		// 需要测试两次取平均值
+		
 		// 读测试
 		readResult, err := runSysBenchCommand("1", "read", "5", version)
 		if err != nil {
