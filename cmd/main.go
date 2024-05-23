@@ -1,7 +1,12 @@
 package main
 
-import "github.com/oneclickvirt/memoryTest/memorytest"
+import (
+	"fmt"
+
+	"github.com/oneclickvirt/memoryTest/memorytest"
+)
 
 func main() {
-	memorytest.SysBenchMemoryTest()
+	res := memorytest.SysBenchMemoryTest()
+	fmt.Printf(res)
 }
