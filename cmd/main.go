@@ -1,10 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
 	"net/http"
 	"runtime"
+	"strings"
+
+	. "github.com/oneclickvirt/memoryTest/defaultset"
 	"github.com/oneclickvirt/memoryTest/memorytest"
 )
 
@@ -17,7 +20,6 @@ func main() {
 	testMethodPtr := flag.String("m", "", "Specific Test Method (sysbench or dd)")
 	flag.Parse()
 	var language, res, testMethod string
-	var isMultiCheck bool
 	if *languagePtr == "" {
 		language = "zh"
 	} else {

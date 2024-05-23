@@ -3,6 +3,7 @@ package memorytest
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -43,13 +44,13 @@ func SysBenchTest(language string) string {
 	if err == nil {
 		version := string(output)
 		var (
-			totalSize string
+			totalSize                                                string
 			testReadOps, testReadSpeed, testWriteOps, testWriteSpeed float64
-			mibReadFlag, mibWriteFlag bool
+			mibReadFlag, mibWriteFlag                                bool
 		)
 
 		// 需要测试两次取平均值
-		
+
 		// 读测试
 		readResult, err := runSysBenchCommand("1", "read", "5", version)
 		if err != nil {
@@ -69,7 +70,10 @@ func SysBenchTest(language string) string {
 						if len(temp1) == 2 {
 							temp2 := strings.Split(temp1[1], " ")
 							if len(temp2) >= 2 {
-								testReadOps += temp2[0]
+								value, err := strconv.ParseFloat(temp2[0], 64)
+								if err == nil {
+									testReadOps += value
+								}
 							}
 						}
 					} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
@@ -77,7 +81,10 @@ func SysBenchTest(language string) string {
 						if len(temp1) == 2 {
 							temp2 := strings.Split(temp1[1], " ")
 							if len(temp2) >= 2 {
-								testReadSpeed += temp2[0]
+								value, err := strconv.ParseFloat(temp2[0], 64)
+								if err == nil {
+									testReadSpeed += value
+								}
 							}
 						}
 					}
@@ -85,14 +92,16 @@ func SysBenchTest(language string) string {
 			}
 		}
 		if mibReadFlag {
-			testReadSpeed = testReadSpeed / (1048576 * 1000000)
+			testReadSpeed = testReadSpeed / (1048576.0 * 1000000.0)
 		}
 		if language == "en" {
 			result += "  Single Read Speed: "
 		} else {
 			result += "  单线程读速度: "
 		}
-		result += testReadSpeed + " MB/s(" + testReadOps + " IOPS)\n"
+		testReadSpeedStr := strconv.FormatFloat(testReadSpeed, 'f', 2, 64)
+		testReadOpsStr := strconv.FormatFloat(testReadOps, 'f', 2, 64)
+		result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS)\n"
 		// 写测试
 		writeResult, err := runSysBenchCommand("1", "write", "5", version)
 		if err != nil {
@@ -112,7 +121,10 @@ func SysBenchTest(language string) string {
 						if len(temp1) == 2 {
 							temp2 := strings.Split(temp1[1], " ")
 							if len(temp2) >= 2 {
-								testWriteOps += temp2[0]
+								value, err := strconv.ParseFloat(temp2[0], 64)
+								if err == nil {
+									testWriteOps += value
+								}
 							}
 						}
 					} else if strings.Contains(line, "MB/sec") || strings.Contains(line, "MiB/sec") {
@@ -120,14 +132,17 @@ func SysBenchTest(language string) string {
 						if len(temp1) == 2 {
 							temp2 := strings.Split(temp1[1], " ")
 							if len(temp2) >= 2 {
-								testWriteSpeed += temp2[0]
+								value, err := strconv.ParseFloat(temp2[0], 64)
+								if err == nil {
+									testWriteSpeed += value
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-		if mibFlag {
+		if mibWriteFlag {
 			testWriteSpeed = testWriteSpeed / (1048576 * 1000000)
 		}
 		if language == "en" {
@@ -135,7 +150,9 @@ func SysBenchTest(language string) string {
 		} else {
 			result += "  单线程写速度: "
 		}
-		result += testReadSpeed + " MB/s(" + testWriteOps + " IOPS)\n"
+		testWriteSpeedStr := strconv.FormatFloat(testWriteSpeed, 'f', 2, 64)
+		testWriteOpsStr := strconv.FormatFloat(testWriteOps, 'f', 2, 64)
+		result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS)\n"
 	} else {
 		return ""
 	}
@@ -148,7 +165,7 @@ func DDTest(language string) string {
 	return result
 }
 
-// WinsatTest 通过 winsat 测试内存读写 
+// WinsatTest 通过 winsat 测试内存读写
 func WinsatTest(language string) string {
 	var result string
 	return result
