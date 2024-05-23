@@ -21,6 +21,8 @@
 curl https://raw.githubusercontent.com/oneclickvirt/memoryTest/main/mt_install.sh -sSf | sh
 ```
 
+有环境依赖，Linux/Unix相关系统请确保本地至少安装有```dd```或```sysbench```工具其中之一，更多架构请查看 https://github.com/oneclickvirt/memoryTest/releases/tag/output
+
 sysbench测试
 
 ![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/741689a2-7887-4cec-9df5-c8e309b2dd84)
