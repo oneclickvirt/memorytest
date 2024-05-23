@@ -32,7 +32,10 @@ func main() {
 		res = memorytest.WinsatTest(language)
 	} else {
 		if testMethod == "sysbench" {
-			res = memorytest.SysBenchMemoryTest(language)
+			res = memorytest.SysBenchTest(language)
+			if res == "" {
+				res = memorytest.DDTest(language)
+			}
 		} else if testMethod == "dd" {
 			res = memorytest.DDTest(language)
 		}
