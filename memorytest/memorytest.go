@@ -110,9 +110,9 @@ func SysBenchTest(language string) string {
 			testWriteSpeed = testWriteSpeed / 1048576 * 1000000
 		}
 		if language == "en" {
-			result += "  Single Seq Write Speed: "
+			result += "Single Seq Write Speed: "
 		} else {
-			result += "  单线程顺序写速度: "
+			result += "单线程顺序写速度: "
 		}
 		testWriteSpeedStr := strconv.FormatFloat(testWriteSpeed, 'f', 2, 64)
 		if testWriteOps > 1000 {
@@ -126,9 +126,9 @@ func SysBenchTest(language string) string {
 			testReadSpeed = testReadSpeed / 1048576.0 * 1000000.0
 		}
 		if language == "en" {
-			result += "  Single Seq Read Speed: "
+			result += "Single Seq Read Speed: "
 		} else {
-			result += "  单线程顺序读速度: "
+			result += "单线程顺序读速度: "
 		}
 		testReadSpeedStr := strconv.FormatFloat(testReadSpeed, 'f', 2, 64)
 		if testReadOps > 1000 {
@@ -198,9 +198,9 @@ func DDTest(language string) string {
 						iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
 					}
 					if language == "en" {
-						result += "  Single Seq Write Speed: "
+						result += "Single Seq Write Speed: "
 					} else {
-						result += "  单线程顺序写速度: "
+						result += "单线程顺序写速度: "
 					}
 					result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
 				}
@@ -235,9 +235,9 @@ func DDTest(language string) string {
 						iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
 					}
 					if language == "en" {
-						result += "  Single Seq Read Speed: "
+						result += "Single Seq Read Speed: "
 					} else {
-						result += "  单线程顺序读速度: "
+						result += "单线程顺序读速度: "
 					}
 					result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
 				}
@@ -263,9 +263,9 @@ func WinsatTest(language string) string {
 				tempL := strings.Split(l, " ")
 				tempText := strings.TrimSpace(tempL[len(tempL)-2])
 				if language == "en" {
-					result += "  Memory Performance: "
+					result += "Memory Performance: "
 				} else {
-					result += "  内存性能: "
+					result += "内存性能: "
 				}
 				result += tempText + "MB/s" + "\n"
 			}
