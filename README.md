@@ -65,3 +65,9 @@ dd测试
 winsat测试
 
 ![1716466171182](https://github.com/oneclickvirt/memoryTest/assets/103393591/c8d38d4e-7357-4c27-b55b-4703805a5cb9)
+
+## 在Golang中使用
+
+```
+go get github.com/oneclickvirt/memorytest@latest
+```
