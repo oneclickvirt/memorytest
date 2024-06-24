@@ -1,8 +1,9 @@
 #!/bin/bash
-#From https://github.com/oneclickvirt/memoryTest
-#2024.05.23
+#From https://github.com/oneclickvirt/memorytest
+#2024.06.24
 
-rm -rf /usr/bin/memoryTest
+rm -rf /usr/bin/memorytest
+rm -rf memorytest
 os=$(uname -s)
 arch=$(uname -m)
 
@@ -10,13 +11,13 @@ case $os in
   Linux)
     case $arch in
       "x86_64" | "x86" | "amd64" | "x64")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-linux-amd64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-linux-amd64
         ;;
       "i386" | "i686")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-linux-386
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-linux-386
         ;;
       "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-linux-arm64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-linux-arm64
         ;;
       *)
         echo "Unsupported architecture: $arch"
@@ -27,13 +28,13 @@ case $os in
   Darwin)
     case $arch in
       "x86_64" | "x86" | "amd64" | "x64")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-darwin-amd64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-darwin-amd64
         ;;
       "i386" | "i686")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-darwin-386
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-darwin-386
         ;;
       "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-darwin-arm64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-darwin-arm64
         ;;
       *)
         echo "Unsupported architecture: $arch"
@@ -44,13 +45,13 @@ case $os in
   FreeBSD)
     case $arch in
       amd64)
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-freebsd-amd64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-freebsd-amd64
         ;;
       "i386" | "i686")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-freebsd-386
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-freebsd-386
         ;;
       "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-freebsd-arm64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-freebsd-arm64
         ;;
       *)
         echo "Unsupported architecture: $arch"
@@ -61,13 +62,13 @@ case $os in
   OpenBSD)
     case $arch in
       amd64)
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-openbsd-amd64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-openbsd-amd64
         ;;
       "i386" | "i686")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-openbsd-386
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-openbsd-386
         ;;
       "armv7l" | "armv8" | "armv8l" | "aarch64" | "arm64")
-        wget -O memoryTest https://github.com/oneclickvirt/memoryTest/releases/download/output/memoryTest-openbsd-arm64
+        wget -O memorytest https://github.com/oneclickvirt/memorytest/releases/download/output/memorytest-openbsd-arm64
         ;;
       *)
         echo "Unsupported architecture: $arch"
@@ -81,10 +82,5 @@ case $os in
     ;;
 esac
 
-chmod 777 memoryTest
-if [ ! -f /usr/bin/memoryTest ]; then
-  mv memoryTest /usr/bin/
-  memoryTest
-else
-  ./memoryTest
-fi
+chmod 777 memorytest
+cp memorytest /usr/bin/memorytest

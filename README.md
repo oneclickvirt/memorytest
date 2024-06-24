@@ -23,8 +23,28 @@
 
 # 使用(Usage)
 
+下载及安装
+
 ```
 curl https://raw.githubusercontent.com/oneclickvirt/memoryTest/main/mt_install.sh -sSf | sh
+```
+
+使用
+
+```
+memorytest
+```
+
+或
+
+```
+./memorytest
+```
+
+进行测试
+
+```
+
 ```
 
 有环境依赖，Linux/Unix相关系统请确保本地至少安装有```dd```或```sysbench```工具其中之一，更多架构请查看 https://github.com/oneclickvirt/memoryTest/releases/tag/output

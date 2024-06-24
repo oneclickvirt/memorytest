@@ -7,18 +7,24 @@ import (
 	"runtime"
 	"strings"
 
-	. "github.com/oneclickvirt/memoryTest/defaultset"
-	"github.com/oneclickvirt/memoryTest/memorytest"
+	. "github.com/oneclickvirt/defaultset"
+	"github.com/oneclickvirt/memorytest/memory"
 )
 
 func main() {
 	go func() {
-		http.Get("https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2FmemoryTest&count_bg=%2323E01C&title_bg=%23555555&icon=sonarcloud.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false")
+		http.Get("https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fmemorytest&count_bg=%2323E01C&title_bg=%23555555&icon=sonarcloud.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false")
 	}()
-	fmt.Println(Green("项目地址:"), Yellow("https://github.com/oneclickvirt/memoryTest"))
+	fmt.Println(Green("项目地址:"), Yellow("https://github.com/oneclickvirt/memorytest"))
+	var showVersion bool
+	flag.BoolVar(&showVersion, "v", false, "show version")
 	languagePtr := flag.String("l", "", "Language parameter (en or zh)")
 	testMethodPtr := flag.String("m", "", "Specific Test Method (sysbench or dd)")
 	flag.Parse()
+	if showVersion {
+		fmt.Println(memory.MemoryTestVersion)
+		return
+	}
 	var language, res, testMethod string
 	if *languagePtr == "" {
 		language = "zh"
@@ -31,16 +37,16 @@ func main() {
 		testMethod = "dd"
 	}
 	if runtime.GOOS == "windows" {
-		res = memorytest.WinsatTest(language)
+		res = memory.WinsatTest(language)
 	} else {
 		if testMethod == "sysbench" {
-			res = memorytest.SysBenchTest(language)
+			res = memory.SysBenchTest(language)
 			if res == "" {
 				res = "sysbench test failed, switch to use dd test.\n"
-				res += memorytest.DDTest(language)
+				res += memory.DDTest(language)
 			}
 		} else if testMethod == "dd" {
-			res = memorytest.DDTest(language)
+			res = memory.DDTest(language)
 		}
 	}
 	fmt.Println("--------------------------------------------------")
