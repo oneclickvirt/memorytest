@@ -40,7 +40,7 @@ func main() {
 		if testMethod != "winsat" && testMethod != "" {
 			res = "Detected host is Windows, using Winsat for testing.\n"
 		}
-		res = memory.WinsatTest(language)
+		res += memory.WinsatTest(language)
 	} else {
 		switch testMethod {
 		case "sysbench":
