@@ -52,7 +52,7 @@ Usage of memorytest:
   -v    show version
 ```
 
-有环境依赖，Linux/Unix相关系统请确保本地至少安装有```dd```或```sysbench```工具其中之一，更多架构请查看 https://github.com/oneclickvirt/memoryTest/releases/tag/output
+有环境依赖，Linux/Unix相关系统请确保本地至少安装有```dd```或```sysbench```工具其中之一，更多架构请查看 https://github.com/oneclickvirt/memorytest/releases/tag/output
 
 sysbench测试
 
@@ -65,6 +65,13 @@ dd测试
 winsat测试
 
 ![1716466171182](https://github.com/oneclickvirt/memoryTest/assets/103393591/c8d38d4e-7357-4c27-b55b-4703805a5cb9)
+
+## 卸载
+
+```
+rm -rf /root/memorytest
+rm -rf /usr/bin/memorytest
+```
 
 ## 在Golang中使用
 
