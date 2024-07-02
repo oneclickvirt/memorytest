@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 
@@ -16,24 +17,32 @@ func main() {
 		http.Get("https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2Fmemorytest&count_bg=%2323E01C&title_bg=%23555555&icon=sonarcloud.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false")
 	}()
 	fmt.Println(Green("项目地址:"), Yellow("https://github.com/oneclickvirt/memorytest"))
-	var showVersion bool
-	flag.BoolVar(&showVersion, "v", false, "show version")
-	languagePtr := flag.String("l", "", "Language parameter (en or zh)")
-	testMethodPtr := flag.String("m", "", "Specific Test Method (sysbench or dd)")
-	flag.Parse()
+	var showVersion, help bool
+	var language, testMethod string
+	memorytestFlag := flag.NewFlagSet("cputest", flag.ContinueOnError)
+	memorytestFlag.BoolVar(&showVersion, "v", false, "show version")
+	memorytestFlag.StringVar(&language, "l", "", "Language parameter (en or zh)")
+	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (sysbench or dd)")
+	memorytestFlag.BoolVar(&memory.EnableLoger, "log", false, "Enable logging")
+	memorytestFlag.Parse(os.Args[1:])
+	if help {
+		fmt.Printf("Usage: %s [options]\n", os.Args[0])
+		memorytestFlag.PrintDefaults()
+		return
+	}
 	if showVersion {
 		fmt.Println(memory.MemoryTestVersion)
 		return
 	}
-	var language, res, testMethod string
-	if *languagePtr == "" {
+	var res string
+	if language == "" {
 		language = "zh"
 	} else {
-		language = strings.ToLower(*languagePtr)
+		language = strings.ToLower(language)
 	}
-	if *testMethodPtr == "" || *testMethodPtr == "sysbench" {
+	if testMethod == "" || strings.ToLower(testMethod) == "sysbench" {
 		testMethod = "sysbench"
-	} else if *testMethodPtr == "dd" {
+	} else if strings.ToLower(testMethod) == "dd" {
 		testMethod = "dd"
 	}
 	if runtime.GOOS == "windows" {

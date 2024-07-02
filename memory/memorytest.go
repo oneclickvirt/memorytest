@@ -7,6 +7,9 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
+
+	. "github.com/oneclickvirt/defaultset"
 )
 
 // runSysBenchCommand 执行 sysbench 命令进行测试
@@ -41,6 +44,10 @@ func runSysBenchCommand(numThreads, oper, maxTime, version string) (string, erro
 // SysBenchTest 使用 sysbench 进行内存测试
 // https://github.com/spiritLHLS/ecs/blob/641724ccd98c21bb1168e26efb349df54dee0fa1/ecs.sh#L2143
 func SysBenchTest(language string) string {
+	if EnableLoger {
+		InitLogger()
+		defer Logger.Sync()
+	}
 	var result string
 	comCheck := exec.Command("sysbench", "--version")
 	output, err := comCheck.CombinedOutput()
@@ -51,7 +58,6 @@ func SysBenchTest(language string) string {
 			testReadOps, testReadSpeed, testWriteOps, testWriteSpeed float64
 			mibReadFlag, mibWriteFlag                                bool
 		)
-
 		// 统一的结果处理函数
 		processResult := func(result string) (float64, float64, bool) {
 			var ops, speed float64
@@ -91,21 +97,27 @@ func SysBenchTest(language string) string {
 			}
 			return ops, speed, mibFlag
 		}
-		// 写测试
-		writeResult, err := runSysBenchCommand("1", "write", "5", version)
-		if err != nil {
-			fmt.Printf("Error running write test: %v\n", strings.TrimSpace(writeResult))
-		} else {
-			testWriteOps, testWriteSpeed, mibWriteFlag = processResult(writeResult)
-		}
 		// 读测试
 		readResult, err := runSysBenchCommand("1", "read", "5", version)
 		if err != nil {
-			fmt.Printf("Error running read test: %v\n", strings.TrimSpace(readResult))
+			if EnableLoger {
+				Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(readResult), err.Error()))
+			}
 		} else {
 			testReadOps, testReadSpeed, mibReadFlag = processResult(readResult)
 		}
+		time.Sleep(700 * time.Millisecond)
+		// 写测试
+		writeResult, err := runSysBenchCommand("1", "write", "5", version)
+		if err != nil {
+			if EnableLoger {
+				Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(writeResult), err.Error()))
+			}
+		} else {
+			testWriteOps, testWriteSpeed, mibWriteFlag = processResult(writeResult)
+		}
 		// 计算和匹配格式
+		// 写
 		if mibWriteFlag {
 			testWriteSpeed = testWriteSpeed / 1048576 * 1000000
 		}
@@ -122,6 +134,7 @@ func SysBenchTest(language string) string {
 			testWriteOpsStr := strconv.FormatFloat(testWriteOps, 'f', 0, 64)
 			result += testWriteSpeedStr + " MB/s(" + testWriteOpsStr + " IOPS, 5s)\n"
 		}
+		// 读
 		if mibReadFlag {
 			testReadSpeed = testReadSpeed / 1048576.0 * 1000000.0
 		}
@@ -139,6 +152,9 @@ func SysBenchTest(language string) string {
 			result += testReadSpeedStr + " MB/s(" + testReadOpsStr + " IOPS, 5s)\n"
 		}
 	} else {
+		if EnableLoger {
+			Logger.Info("cannot match sysbench command: " + err.Error())
+		}
 		return ""
 	}
 	return result
@@ -207,6 +223,9 @@ func DDTest(language string) string {
 			}
 		}
 	} else {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
 		return ""
 	}
 	// 读取测试
@@ -244,6 +263,9 @@ func DDTest(language string) string {
 			}
 		}
 	} else {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
 		return ""
 	}
 	return result
@@ -251,10 +273,17 @@ func DDTest(language string) string {
 
 // WinsatTest 通过 winsat 测试内存读写
 func WinsatTest(language string) string {
+	if EnableLoger {
+		InitLogger()
+		defer Logger.Sync()
+	}
 	var result string
 	cmd := exec.Command("winsat", "mem")
 	output, err := cmd.Output()
 	if err != nil {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Error running winsat command: %v %s\n", strings.TrimSpace(string(output)), err.Error()))
+		}
 		return ""
 	} else {
 		tempList := strings.Split(string(output), "\n")
