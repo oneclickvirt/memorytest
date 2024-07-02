@@ -44,9 +44,12 @@ memorytest
 进行测试
 
 ```
-Usage of memorytest:
+Usage: memorytest [options]
+  -h    Show help information
   -l string
         Language parameter (en or zh)
+  -log
+        Enable logging
   -m string
         Specific Test Method (sysbench or dd)
   -v    show version
