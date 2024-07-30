@@ -209,11 +209,6 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 				} else {
 					iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
 				}
-				if language == "en" {
-					result += "Single Seq Speed: "
-				} else {
-					result += "单线程顺序速度: "
-				}
 				result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
 			}
 		}
