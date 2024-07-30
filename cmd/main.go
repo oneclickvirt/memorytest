@@ -68,4 +68,8 @@ func main() {
 	fmt.Println("--------------------------------------------------")
 	fmt.Printf(res)
 	fmt.Println("--------------------------------------------------")
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		fmt.Println("Press Enter to exit...")
+		fmt.Scanln()
+	}
 }
