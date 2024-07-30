@@ -164,11 +164,7 @@ func SysBenchTest(language string) string {
 func execDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (string, error) {
 	var tempText string
 	var cmd2 *exec.Cmd
-	if isWrite {
-		cmd2 = exec.Command("sudo", "dd", "if="+ifKey, "of="+ofKey, "bs="+bs, "count="+blockCount, "conv=fdatasync")
-	} else {
-		cmd2 = exec.Command("sudo", "dd", "if="+ifKey, "of="+ofKey, "bs="+bs, "count="+blockCount)
-	}
+	cmd2 = exec.Command("sudo", "dd", "if="+ifKey, "of="+ofKey, "bs="+bs, "count="+blockCount)
 	stderr2, err := cmd2.StderrPipe()
 	if err == nil {
 		if err := cmd2.Start(); err == nil {
@@ -187,40 +183,66 @@ func execDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (string, erro
 	return tempText, nil
 }
 
-// DDTest 通过 dd 测试内存读写
+// parseOutput 解析结果
+func parseOutput(tempText, language string, records float64) (string, error) {
+	var result string
+	tp1 := strings.Split(tempText, "\n")
+	for _, t := range tp1 {
+		if strings.Contains(t, "bytes") || strings.Contains(t, "字节") {
+			var tp2 []string
+			if strings.Contains(t, "bytes") {
+				tp2 = strings.Split(t, ",")
+			} else {
+				tp2 = strings.Split(t, "，")
+			}
+			if len(tp2) == 4 {
+				usageTime, err := strconv.ParseFloat(strings.TrimSpace(strings.Split(strings.TrimSpace(tp2[2]), " ")[0]), 64)
+				if err != nil {
+					return "", err
+				}
+				ioSpeed := strings.Split(strings.TrimSpace(tp2[3]), " ")[0]
+				ioSpeedFlat := strings.Split(strings.TrimSpace(tp2[3]), " ")[1]
+				iops := records / usageTime
+				var iopsText string
+				if iops >= 1000 {
+					iopsText = strconv.FormatFloat(iops/1000, 'f', 2, 64) + "K IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
+				} else {
+					iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
+				}
+				if language == "en" {
+					result += "Single Seq Speed: "
+				} else {
+					result += "单线程顺序速度: "
+				}
+				result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
+			}
+		}
+	}
+	return result, nil
+}
+
 func DDTest(language string) string {
 	var result string
-	// 写入测试
-	// dd if=/dev/zero of=/tmp/testfile.test bs=1M count=1024 conv=fdatasync
-	tempText, err := execDDTest("/dev/zero", "/tmp/testfile.test", "1M", "1024", true)
-	defer os.Remove("/tmp/testfile.test")
-	var records, usageTime float64
-	records = 1024.0
+	var err error
+	var tempText string
+	var records float64 = 1024.0
+	// Write test
+	tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", "1024", true)
+	defer os.Remove("/dev/shm/testfile.test")
 	if err == nil {
-		tp1 := strings.Split(tempText, "\n")
-		for _, t := range tp1 {
-			if strings.Contains(t, "bytes") {
-				// t 为 104857600 bytes (105 MB, 100 MiB) copied, 4.67162 s, 22.4 MB/s
-				tp2 := strings.Split(t, ",")
-				if len(tp2) == 4 {
-					usageTime, _ = strconv.ParseFloat(strings.Split(strings.TrimSpace(tp2[2]), " ")[0], 64)
-					ioSpeed := strings.Split(strings.TrimSpace(tp2[3]), " ")[0]
-					ioSpeedFlat := strings.Split(strings.TrimSpace(tp2[3]), " ")[1]
-					iops := records / usageTime
-					var iopsText string
-					if iops >= 1000 {
-						iopsText = strconv.FormatFloat(iops/1000, 'f', 2, 64) + "K IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-					} else {
-						iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-					}
-					if language == "en" {
-						result += "Single Seq Write Speed: "
-					} else {
-						result += "单线程顺序写速度: "
-					}
-					result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
-				}
+		writeResult, err := parseOutput(tempText, language, records)
+		if err == nil {
+			if language == "en" {
+				result += "Single Seq Write Speed: "
+			} else {
+				result += "单线程顺序写速度: "
 			}
+			result += writeResult
+		} else {
+			if EnableLoger {
+				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", err.Error()))
+			}
+			return ""
 		}
 	} else {
 		if EnableLoger {
@@ -228,39 +250,26 @@ func DDTest(language string) string {
 		}
 		return ""
 	}
-	// 读取测试
-	// dd if=/tmp/testfile.test of=/dev/null bs=1M count=1024
-	tempText, err = execDDTest("/tmp/testfile.test", "/dev/null", "1M", "1024", false)
-	defer os.Remove("/tmp/testfile.test")
+	// Read test
+	tempText, err = execDDTest("/dev/shm/testfile.test", "/dev/null", "1M", "1024", false)
 	if err != nil || strings.Contains(tempText, "Invalid argument") || strings.Contains(tempText, "Permission denied") {
-		tempText, _ = execDDTest("/tmp/testfile.test", "/tmp/testfile_read.test", "1M", "1024", false)
+		tempText, _ = execDDTest("/dev/shm/testfile.test", "/tmp/testfile_read.test", "1M", "1024", false)
 		defer os.Remove("/tmp/testfile_read.test")
 	}
 	if err == nil {
-		tp1 := strings.Split(tempText, "\n")
-		for _, t := range tp1 {
-			if strings.Contains(t, "bytes") {
-				// t 为 104857600 bytes (105 MB, 100 MiB) copied, 4.67162 s, 22.4 MB/s
-				tp2 := strings.Split(t, ",")
-				if len(tp2) == 4 {
-					usageTime, _ = strconv.ParseFloat(strings.Split(strings.TrimSpace(tp2[2]), " ")[0], 64)
-					ioSpeed := strings.Split(strings.TrimSpace(tp2[3]), " ")[0]
-					ioSpeedFlat := strings.Split(strings.TrimSpace(tp2[3]), " ")[1]
-					iops := records / usageTime
-					var iopsText string
-					if iops >= 1000 {
-						iopsText = strconv.FormatFloat(iops/1000, 'f', 2, 64) + "K IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-					} else {
-						iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-					}
-					if language == "en" {
-						result += "Single Seq Read Speed: "
-					} else {
-						result += "单线程顺序读速度: "
-					}
-					result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
-				}
+		readResult, err := parseOutput(tempText, language, records)
+		if err == nil {
+			if language == "en" {
+				result += "Single Seq Read Speed: "
+			} else {
+				result += "单线程顺序读速度: "
 			}
+			result += readResult
+		} else {
+			if EnableLoger {
+				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", err.Error()))
+			}
+			return ""
 		}
 	} else {
 		if EnableLoger {
