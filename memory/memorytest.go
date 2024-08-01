@@ -139,7 +139,7 @@ func SysBenchTest(language string) string {
 			testReadSpeed = testReadSpeed / 1048576.0 * 1000000.0
 		}
 		if language == "en" {
-			result += "Single Seq Read Speed: "
+			result += "Single Seq Read  Speed: "
 		} else {
 			result += "单线程顺序读速度: "
 		}
@@ -255,7 +255,7 @@ func DDTest(language string) string {
 		readResult, err := parseOutput(tempText, language, records)
 		if err == nil {
 			if language == "en" {
-				result += "Single Seq Read Speed: "
+				result += "Single Seq Read  Speed: "
 			} else {
 				result += "单线程顺序读速度: "
 			}
