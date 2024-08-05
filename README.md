@@ -26,7 +26,7 @@
 下载及安装
 
 ```
-curl https://raw.githubusercontent.com/oneclickvirt/memoryTest/main/mt_install.sh -sSf | sh
+curl https://raw.githubusercontent.com/oneclickvirt/memoryTest/main/mt_install.sh -sSf | bash
 ```
 
 使用
