@@ -211,6 +211,22 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 				}
 				result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
 			}
+			if len(tp2) == 3 {
+				usageTime, err := strconv.ParseFloat(strings.TrimSpace(strings.Split(strings.TrimSpace(tp2[1]), " ")[0]), 64)
+				if err != nil {
+					return "", err
+				}
+				ioSpeed := strings.Split(strings.TrimSpace(tp2[2]), " ")[0]
+				ioSpeedFlat := strings.Split(strings.TrimSpace(tp2[2]), " ")[1]
+				iops := records / usageTime
+				var iopsText string
+				if iops >= 1000 {
+					iopsText = strconv.FormatFloat(iops/1000, 'f', 2, 64) + "K IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
+				} else {
+					iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
+				}
+				result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
+			}
 		}
 	}
 	return result, nil
@@ -232,6 +248,7 @@ func DDTest(language string) string {
 		tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", size, true)
 		defer os.Remove("/dev/shm/testfile.test")
 		if EnableLoger {
+			Logger.Info("Write test:")
 			Logger.Info(tempText)
 		}
 		if err == nil {
@@ -268,6 +285,7 @@ func DDTest(language string) string {
 			defer os.Remove("/tmp/testfile_read.test")
 		}
 		if EnableLoger {
+			Logger.Info("Read test:")
 			Logger.Info(tempText)
 		}
 		if err == nil {
