@@ -222,8 +222,16 @@ func DDTest(language string) string {
 	var tempText string
 	var records float64 = 1024.0
 	// Write test
-	tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", "1024", true)
-	defer os.Remove("/dev/shm/testfile.test")
+	// sudo dd if=/dev/zero of=/dev/shm/testfile.test bs=1M count=1024
+	sizes := []string{"1024", "512", "256", "128"}
+	for _, size := range sizes {
+		tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", size, true)
+		defer os.Remove("/dev/shm/testfile.test")
+		if err == nil {
+			break
+		}
+		os.Remove("/dev/shm/testfile.test")
+	}
 	if err == nil {
 		writeResult, err := parseOutput(tempText, language, records)
 		if err == nil {
@@ -246,10 +254,16 @@ func DDTest(language string) string {
 		return ""
 	}
 	// Read test
-	tempText, err = execDDTest("/dev/shm/testfile.test", "/dev/null", "1M", "1024", false)
-	if err != nil || strings.Contains(tempText, "Invalid argument") || strings.Contains(tempText, "Permission denied") {
-		tempText, _ = execDDTest("/dev/shm/testfile.test", "/tmp/testfile_read.test", "1M", "1024", false)
-		defer os.Remove("/tmp/testfile_read.test")
+	for _, size := range sizes {
+		tempText, err = execDDTest("/dev/shm/testfile.test", "/dev/null", "1M", size, false)
+		if err != nil || strings.Contains(tempText, "Invalid argument") || strings.Contains(tempText, "Permission denied") {
+			tempText, _ = execDDTest("/dev/shm/testfile.test", "/tmp/testfile_read.test", "1M", size, false)
+			defer os.Remove("/tmp/testfile_read.test")
+		}
+		if err == nil {
+			break
+		}
+		os.Remove("/tmp/testfile_read.test")
 	}
 	if err == nil {
 		readResult, err := parseOutput(tempText, language, records)
