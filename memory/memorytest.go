@@ -217,18 +217,25 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 }
 
 func DDTest(language string) string {
+	if EnableLoger {
+		InitLogger()
+		defer Logger.Sync()
+	}
 	var result string
 	var err error
 	var tempText string
 	var records float64 = 1024.0
 	// Write test
 	// sudo dd if=/dev/zero of=/dev/shm/testfile.test bs=1M count=1024
-	sizes := []string{"1024", "512", "256", "128"}
+	sizes := []string{"1024", "128"}
 	for _, size := range sizes {
 		tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", size, true)
 		defer os.Remove("/dev/shm/testfile.test")
 		if err == nil {
 			break
+		}
+		if EnableLoger && err != nil {
+			Logger.Info(err.Error())
 		}
 		os.Remove("/dev/shm/testfile.test")
 	}
@@ -259,6 +266,9 @@ func DDTest(language string) string {
 		if err != nil || strings.Contains(tempText, "Invalid argument") || strings.Contains(tempText, "Permission denied") {
 			tempText, _ = execDDTest("/dev/shm/testfile.test", "/tmp/testfile_read.test", "1M", size, false)
 			defer os.Remove("/tmp/testfile_read.test")
+		}
+		if EnableLoger && err != nil {
+			Logger.Info(err.Error())
 		}
 		if err == nil {
 			break
