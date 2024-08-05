@@ -239,7 +239,7 @@ func DDTest(language string) string {
 		}
 		os.Remove("/dev/shm/testfile.test")
 	}
-	if err == nil {
+	if err == nil || strings.Contains(tempText, "No space left on device") {
 		writeResult, err := parseOutput(tempText, language, records)
 		if err == nil {
 			if language == "en" {
@@ -275,7 +275,7 @@ func DDTest(language string) string {
 		}
 		os.Remove("/tmp/testfile_read.test")
 	}
-	if err == nil {
+	if err == nil || strings.Contains(tempText, "No space left on device") {
 		readResult, err := parseOutput(tempText, language, records)
 		if err == nil {
 			if language == "en" {
