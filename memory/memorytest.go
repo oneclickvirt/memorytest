@@ -231,11 +231,11 @@ func DDTest(language string) string {
 	for _, size := range sizes {
 		tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", size, true)
 		defer os.Remove("/dev/shm/testfile.test")
+		if EnableLoger {
+			Logger.Info(tempText)
+		}
 		if err == nil {
 			break
-		}
-		if EnableLoger && err != nil {
-			Logger.Info(err.Error())
 		}
 		os.Remove("/dev/shm/testfile.test")
 	}
@@ -267,8 +267,8 @@ func DDTest(language string) string {
 			tempText, _ = execDDTest("/dev/shm/testfile.test", "/tmp/testfile_read.test", "1M", size, false)
 			defer os.Remove("/tmp/testfile_read.test")
 		}
-		if EnableLoger && err != nil {
-			Logger.Info(err.Error())
+		if EnableLoger {
+			Logger.Info(tempText)
 		}
 		if err == nil {
 			break
