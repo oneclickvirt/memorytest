@@ -200,8 +200,14 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 				if err != nil {
 					return "", err
 				}
-				ioSpeed := strings.Split(strings.TrimSpace(tp2[3]), " ")[0]
-				ioSpeedFlat := strings.Split(strings.TrimSpace(tp2[3]), " ")[1]
+				var ioSpeed, ioSpeedFlat string
+				parts := strings.Fields(strings.TrimSpace(tp2[3]))
+				if len(parts) < 2 {
+					return "", fmt.Errorf("Wrong len of parts in tp2_4")
+				} else {
+					ioSpeed = parts[0]
+					ioSpeedFlat = parts[1]
+				}
 				iops := records / usageTime
 				var iopsText string
 				if iops >= 1000 {
@@ -216,8 +222,14 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 				if err != nil {
 					return "", err
 				}
-				ioSpeed := strings.Split(strings.TrimSpace(tp2[2]), " ")[0]
-				ioSpeedFlat := strings.Split(strings.TrimSpace(tp2[2]), " ")[1]
+				var ioSpeed, ioSpeedFlat string
+				parts := strings.Fields(strings.TrimSpace(tp2[2]))
+				if len(parts) < 2 {
+					return "", fmt.Errorf("Wrong len of parts in tp2_3")
+				} else {
+					ioSpeed = parts[0]
+					ioSpeedFlat = parts[1]
+				}
 				iops := records / usageTime
 				var iopsText string
 				if iops >= 1000 {
