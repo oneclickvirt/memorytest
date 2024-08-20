@@ -185,62 +185,55 @@ func execDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (string, erro
 	return tempText, nil
 }
 
+func parseUsageTime(s string) (float64, error) {
+	return strconv.ParseFloat(strings.TrimSpace(strings.Fields(strings.TrimSpace(s))[0]), 64)
+}
+
+func parseIOSpeed(s string) (string, string, error) {
+	parts := strings.Fields(strings.TrimSpace(s))
+	if len(parts) < 2 {
+		return "", "", fmt.Errorf("IO速度格式错误")
+	}
+	return parts[0], parts[1], nil
+}
+
+func formatIOPS(iops, usageTime float64) string {
+	if iops >= 1000 {
+		return fmt.Sprintf("%.2fK IOPS, %.2fs", iops/1000, usageTime)
+	}
+	return fmt.Sprintf("%.2f IOPS, %.2fs", iops, usageTime)
+}
+
 // parseOutput 解析结果
 func parseOutput(tempText, language string, records float64) (string, error) {
 	var result string
-	tp1 := strings.Split(tempText, "\n")
-	for _, t := range tp1 {
-		if strings.Contains(t, "bytes") || strings.Contains(t, "字节") {
-			var tp2 []string
-			if strings.Contains(t, "bytes") {
-				tp2 = strings.Split(t, ",")
+	lines := strings.Split(tempText, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "bytes") || strings.Contains(line, "字节") {
+			var separator string
+			if strings.Contains(line, "bytes") {
+				separator = ","
 			} else {
-				tp2 = strings.Split(t, "，")
+				separator = "，"
 			}
-			if len(tp2) == 4 {
-				usageTime, err := strconv.ParseFloat(strings.TrimSpace(strings.Split(strings.TrimSpace(tp2[2]), " ")[0]), 64)
-				if err != nil {
-					return "", err
-				}
-				var ioSpeed, ioSpeedFlat string
-				parts := strings.Fields(strings.TrimSpace(tp2[3]))
-				if len(parts) < 2 {
-					return "", fmt.Errorf("Wrong len of parts in tp2_4")
-				} else {
-					ioSpeed = parts[0]
-					ioSpeedFlat = parts[1]
-				}
-				iops := records / usageTime
-				var iopsText string
-				if iops >= 1000 {
-					iopsText = strconv.FormatFloat(iops/1000, 'f', 2, 64) + "K IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-				} else {
-					iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-				}
-				result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
+			parts := strings.Split(line, separator)
+			if len(parts) < 3 || len(parts) > 4 {
+				return "", fmt.Errorf("意外的dd输出格式")
 			}
-			if len(tp2) == 3 {
-				usageTime, err := strconv.ParseFloat(strings.TrimSpace(strings.Split(strings.TrimSpace(tp2[1]), " ")[0]), 64)
-				if err != nil {
-					return "", err
-				}
-				var ioSpeed, ioSpeedFlat string
-				parts := strings.Fields(strings.TrimSpace(tp2[2]))
-				if len(parts) < 2 {
-					return "", fmt.Errorf("Wrong len of parts in tp2_3")
-				} else {
-					ioSpeed = parts[0]
-					ioSpeedFlat = parts[1]
-				}
-				iops := records / usageTime
-				var iopsText string
-				if iops >= 1000 {
-					iopsText = strconv.FormatFloat(iops/1000, 'f', 2, 64) + "K IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-				} else {
-					iopsText = strconv.FormatFloat(iops, 'f', 2, 64) + " IOPS, " + strconv.FormatFloat(usageTime, 'f', 2, 64) + "s"
-				}
-				result += fmt.Sprintf("%-30s", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")") + "\n"
+			timeIndex := len(parts) - 2
+			speedIndex := len(parts) - 1
+			usageTime, err := parseUsageTime(parts[timeIndex])
+			if err != nil {
+				return "", err
 			}
+			ioSpeed, ioSpeedFlat, err := parseIOSpeed(parts[speedIndex])
+			if err != nil {
+				return "", err
+			}
+			iops := records / usageTime
+			iopsText := formatIOPS(iops, usageTime)
+
+			result += fmt.Sprintf("%-30s\n", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")")
 		}
 	}
 	return result, nil
