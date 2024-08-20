@@ -103,6 +103,7 @@ func SysBenchTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(readResult), err.Error()))
 			}
+			return ""
 		} else {
 			testReadOps, testReadSpeed, mibReadFlag = processResult(readResult)
 		}
@@ -113,6 +114,7 @@ func SysBenchTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(writeResult), err.Error()))
 			}
+			return ""
 		} else {
 			testWriteOps, testWriteSpeed, mibWriteFlag = processResult(writeResult)
 		}
