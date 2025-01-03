@@ -1,0 +1,116 @@
+// memory_test.go
+package memory
+
+import (
+	"testing"
+	"time"
+)
+
+func TestMemoryReadSeq(t *testing.T) {
+	config := Config{
+		NumThreads: 1,
+		BlockSize:  1024 * 1024,              // 1MB
+		TotalSize:  100 * 1024 * 1024 * 1024, // 100GB
+		TestTime:   5,
+		Operation:  "read",
+		AccessMode: "seq",
+	}
+
+	test := NewMemoryTest(config)
+	stats, err := test.Run()
+	if err != nil {
+		t.Errorf("Failed to run memory test: %v", err)
+		return
+	}
+
+	// 验证结果
+	if stats.Ops == 0 {
+		t.Error("Expected non-zero operations")
+	}
+
+	if stats.Duration < time.Duration(config.TestTime)*time.Second {
+		t.Error("Test duration was shorter than specified")
+	}
+
+	// 检查性能指标
+	opsPerSec := float64(stats.Ops) / stats.Duration.Seconds()
+	mibPerSec := float64(stats.Ops) * float64(config.BlockSize) / (1024 * 1024) / stats.Duration.Seconds()
+
+	t.Logf("Performance metrics:")
+	t.Logf("Operations per second: %.2f", opsPerSec)
+	t.Logf("MiB per second: %.2f", mibPerSec)
+	t.Logf("Average latency (ms): %.2f", stats.Avg)
+}
+
+func TestMemoryWriteSeq(t *testing.T) {
+	config := Config{
+		NumThreads: 1,
+		BlockSize:  1024 * 1024,              // 1MB
+		TotalSize:  100 * 1024 * 1024 * 1024, // 100GB
+		TestTime:   5,
+		Operation:  "write",
+		AccessMode: "seq",
+	}
+
+	test := NewMemoryTest(config)
+	stats, err := test.Run()
+	if err != nil {
+		t.Errorf("Failed to run memory test: %v", err)
+		return
+	}
+
+	// 验证结果
+	if stats.Ops == 0 {
+		t.Error("Expected non-zero operations")
+	}
+
+	if stats.Duration < time.Duration(config.TestTime)*time.Second {
+		t.Error("Test duration was shorter than specified")
+	}
+
+	// 检查性能指标
+	opsPerSec := float64(stats.Ops) / stats.Duration.Seconds()
+	mibPerSec := float64(stats.Ops) * float64(config.BlockSize) / (1024 * 1024) / stats.Duration.Seconds()
+
+	t.Logf("Performance metrics:")
+	t.Logf("Operations per second: %.2f", opsPerSec)
+	t.Logf("MiB per second: %.2f", mibPerSec)
+	t.Logf("Average latency (ms): %.2f", stats.Avg)
+}
+
+// 添加基准测试
+func BenchmarkMemoryReadSeq(b *testing.B) {
+	config := Config{
+		NumThreads: 1,
+		BlockSize:  1024 * 1024,
+		TotalSize:  1024 * 1024 * 1024,
+		TestTime:   1,
+		Operation:  "read",
+		AccessMode: "seq",
+	}
+
+	test := NewMemoryTest(config)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		test.Run()
+	}
+}
+
+func BenchmarkMemoryWriteSeq(b *testing.B) {
+	config := Config{
+		NumThreads: 1,
+		BlockSize:  1024 * 1024,
+		TotalSize:  1024 * 1024 * 1024,
+		TestTime:   1,
+		Operation:  "write",
+		AccessMode: "seq",
+	}
+
+	test := NewMemoryTest(config)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		test.Run()
+	}
+}
