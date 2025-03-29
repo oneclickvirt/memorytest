@@ -1,6 +1,8 @@
 # memoryTest
 
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Foneclickvirt%2FmemoryTest&count_bg=%2323E01C&title_bg=%23555555&icon=sonarcloud.svg&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com) [![Build and Release](https://github.com/oneclickvirt/memoryTest/actions/workflows/main.yml/badge.svg)](https://github.com/oneclickvirt/memoryTest/actions/workflows/main.yml)
+[![Hits](https://hits.spiritlhl.net/memorytest.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
+
+[![Build and Release](https://github.com/oneclickvirt/memoryTest/actions/workflows/main.yml/badge.svg)](https://github.com/oneclickvirt/memoryTest/actions/workflows/main.yml)
 
 内存测试模块 (Memory Test Module) 
 
