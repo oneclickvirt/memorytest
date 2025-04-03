@@ -178,10 +178,14 @@ jobs:
         run: |
           cd coreutils
           ./bootstrap
-          ./configure --enable-single-binary=dd LDFLAGS="-static"
-          make -j$(nproc)
-          strip src/coreutils
-          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 配置，只启用dd，禁用所有其他程序
+          ./configure CFLAGS="-O2" LDFLAGS="-static" \
+            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
+          # 编译
+          make -j$(nproc) src/dd
+          # 将dd文件复制到输出目录
+          strip src/dd
+          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
         continue-on-error: true
 
       - name: Build dd static binary (Linux - 386)
@@ -189,10 +193,14 @@ jobs:
         run: |
           cd coreutils
           ./bootstrap
-          CFLAGS="-m32" LDFLAGS="-m32 -static" ./configure --enable-single-binary=dd
-          make -j$(nproc)
-          strip src/coreutils
-          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 配置，只启用dd，禁用所有其他程序
+          CFLAGS="-m32 -O2" LDFLAGS="-m32 -static" ./configure \
+            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
+          # 编译
+          make -j$(nproc) src/dd
+          # 将dd文件复制到输出目录
+          strip src/dd
+          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
         continue-on-error: true
 
       - name: Build dd static binary (Linux - ARM64)
@@ -200,10 +208,15 @@ jobs:
         run: |
           cd coreutils
           ./bootstrap
-          CC=aarch64-linux-gnu-gcc ./configure --enable-single-binary=dd --host=aarch64-linux-gnu LDFLAGS="-static"
-          make -j$(nproc)
-          aarch64-linux-gnu-strip src/coreutils
-          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 配置，只启用dd，禁用所有其他程序
+          CC=aarch64-linux-gnu-gcc ./configure --host=aarch64-linux-gnu \
+            CFLAGS="-O2" LDFLAGS="-static" \
+            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
+          # 编译
+          make -j$(nproc) src/dd
+          # 将dd文件复制到输出目录
+          aarch64-linux-gnu-strip src/dd
+          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
         continue-on-error: true
 
       - name: Build dd static binary (Linux - ARMv7)
@@ -211,10 +224,15 @@ jobs:
         run: |
           cd coreutils
           ./bootstrap
-          CC=arm-linux-gnueabihf-gcc ./configure --enable-single-binary=dd --host=arm-linux-gnueabihf LDFLAGS="-static"
-          make -j$(nproc)
-          arm-linux-gnueabihf-strip src/coreutils
-          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}v${{ matrix.goarm }}
+          # 配置，只启用dd，禁用所有其他程序
+          CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnueabihf \
+            CFLAGS="-O2" LDFLAGS="-static" \
+            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
+          # 编译
+          make -j$(nproc) src/dd
+          # 将dd文件复制到输出目录
+          arm-linux-gnueabihf-strip src/dd
+          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}v${{ matrix.goarm }}
         continue-on-error: true
 
       - name: Build dd static binary (Linux - Special Architectures)
@@ -254,10 +272,15 @@ jobs:
             STRIP=powerpc64le-linux-gnu-strip
           fi
           
-          CC=${CROSS_CC} ./configure --enable-single-binary=dd --host=${HOST} LDFLAGS="-static"
-          make -j$(nproc)
-          ${STRIP} src/coreutils
-          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 配置，只启用dd，禁用所有其他程序
+          CC=${CROSS_CC} ./configure --host=${HOST} \
+            CFLAGS="-O2" LDFLAGS="-static" \
+            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
+          # 编译
+          make -j$(nproc) src/dd
+          # 将dd文件复制到输出目录
+          ${STRIP} src/dd
+          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
         continue-on-error: true
 
       - name: Build dd static binary (macOS)
@@ -265,10 +288,15 @@ jobs:
         run: |
           cd coreutils
           ./bootstrap
-          ./configure --enable-single-binary=dd
-          make -j$(sysctl -n hw.ncpu)
-          strip src/coreutils
-          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+          # 配置，只启用dd，禁用所有其他程序
+          ./configure \
+            CFLAGS="-O2" \
+            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
+          # 编译
+          make -j$(sysctl -n hw.ncpu) src/dd
+          # 将dd文件复制到输出目录
+          strip src/dd
+          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
         continue-on-error: true
 
       - name: Upload binary artifact
