@@ -116,7 +116,8 @@ jobs:
             wget \
             xz-utils \
             git \
-            curl
+            curl \
+            libc6-dev
           
           # 安装交叉编译工具链
           if [[ "${{ matrix.target }}" != "linux-amd64" ]]; then
