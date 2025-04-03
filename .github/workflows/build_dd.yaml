@@ -97,5 +97,32 @@ jobs:
       - name: 上传Coreutils二进制文件
         uses: actions/upload-artifact@v4
         with:
-          name: coreutils-binaries
+          name: coreutils-${{ matrix.target.name }}
           path: memory/bin/
+          retention-days: 1
+
+  combine:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码库
+        uses: actions/checkout@v4
+      
+      - name: 创建目录
+        run: mkdir -p all-binaries
+      
+      - name: 下载所有二进制文件
+        uses: actions/download-artifact@v4
+        with:
+          path: all-binaries
+          pattern: coreutils-*
+          merge-multiple: true
+      
+      - name: 显示下载的文件
+        run: find all-binaries -type f | sort
+      
+      - name: 上传合并后的二进制文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: coreutils-binaries
+          path: all-binaries/**/*
