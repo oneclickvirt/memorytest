@@ -7,67 +7,91 @@ jobs:
     strategy:
       matrix:
         target:
-          - { os: "linux", arch: "x86_64" }
-          - { os: "linux", arch: "aarch64" }
-          - { os: "linux", arch: "i686" }
-          - { os: "darwin", arch: "x86_64" }
-          - { os: "darwin", arch: "aarch64" }
-          - { os: "windows", arch: "x86_64" }
-          - { os: "windows", arch: "i686" }
+          # Linux (GNU)
+          - { triple: "x86_64-unknown-linux-gnu", name: "linux-amd64" }
+          - { triple: "aarch64-unknown-linux-gnu", name: "linux-arm64" }
+          - { triple: "i686-unknown-linux-gnu", name: "linux-386" }
+          # Linux (MUSL)
+          - { triple: "x86_64-unknown-linux-musl", name: "linux-musl-amd64" }
+          - { triple: "aarch64-unknown-linux-musl", name: "linux-musl-arm64" }
+          - { triple: "i686-unknown-linux-musl", name: "linux-musl-386" }
+          # macOS
+          - { triple: "x86_64-apple-darwin", name: "darwin-amd64" }
+          - { triple: "aarch64-apple-darwin", name: "darwin-arm64" }
+          # Windows (MSVC)
+          - { triple: "x86_64-pc-windows-msvc", name: "windows-amd64" }
+          - { triple: "i686-pc-windows-msvc", name: "windows-386" }
+          # ARM
+          - { triple: "arm-unknown-linux-gnueabihf", name: "linux-armhf" }
     steps:
       - name: 检出代码库
         uses: actions/checkout@v4
       
+      - name: 获取最新版本号
+        id: get_version
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/uutils/coreutils/releases/latest)
+          VERSION=$(echo "$LATEST_RELEASE" | grep -Po '"tag_name": "\K.*?(?=")' | sed 's/^v//')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "版本号: $VERSION"
+      
       - name: 下载Coreutils
         run: |
-          # 获取目标平台的下载URL
-          if [[ "${{ matrix.target.os }}" == "windows" ]]; then
-            URL="https://github.com/uutils/coreutils/releases/latest/download/coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}.zip"
+          # 根据三元组确定文件扩展名
+          if [[ "${{ matrix.target.triple }}" == *"windows"* ]]; then
+            EXT="zip"
           else
-            URL="https://github.com/uutils/coreutils/releases/latest/download/coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}.tar.gz"
+            EXT="tar.gz"
           fi
           
-          echo "下载 $URL"
+          # 构建下载URL
+          URL="https://github.com/uutils/coreutils/releases/latest/download/coreutils-$VERSION-${{ matrix.target.triple }}.$EXT"
+          echo "下载: $URL"
+          
+          # 下载文件
           curl -LO "$URL"
           
-          # 记录下载的文件名
-          echo "DOWNLOAD_FILE=$(ls coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}.*)" >> $GITHUB_ENV
+          # 保存文件名到环境变量
+          echo "DOWNLOAD_FILE=coreutils-$VERSION-${{ matrix.target.triple }}.$EXT" >> $GITHUB_ENV
       
-      - name: 处理下载的文件
+      - name: 解压文件并处理
         run: |
+          # 创建输出目录
           mkdir -p memory/bin
           
           echo "处理文件: $DOWNLOAD_FILE"
           
           # 根据文件类型解压
           if [[ "$DOWNLOAD_FILE" == *.zip ]]; then
+            # 创建临时目录并解压
+            mkdir -p temp_extract
             unzip "$DOWNLOAD_FILE" -d temp_extract
+            
+            # 查找coreutils.exe并复制到目标位置
+            find temp_extract -type f -name "coreutils.exe" -exec cp {} "memory/bin/coreutils-${{ matrix.target.name }}.exe" \;
           else
+            # 创建临时目录并解压
             mkdir -p temp_extract
             tar -xf "$DOWNLOAD_FILE" -C temp_extract
+            
+            # 查找coreutils二进制文件并复制到目标位置
+            find temp_extract -type f -name "coreutils" -exec cp {} "memory/bin/coreutils-${{ matrix.target.name }}" \;
+            chmod +x "memory/bin/coreutils-${{ matrix.target.name }}"
           fi
           
-          # 查找并处理二进制文件
-          cd temp_extract
-          find . -type f -name "coreutils*" | while read file; do
-            echo "找到文件: $file"
-            if [[ "${{ matrix.target.os }}" == "windows" ]]; then
-              cp "$file" "../memory/bin/coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}.exe"
-            else
-              cp "$file" "../memory/bin/coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}"
-              chmod +x "../memory/bin/coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}"
+          # 检查是否成功找到并复制了文件
+          if [[ "$DOWNLOAD_FILE" == *.zip ]]; then
+            if [ ! -f "memory/bin/coreutils-${{ matrix.target.name }}.exe" ]; then
+              echo "未能找到coreutils.exe，显示目录结构："
+              find temp_extract -type f
+              exit 1
             fi
-            # 只处理第一个找到的文件
-            break
-          done
-          
-          cd ..
-          
-          # 如果没有找到文件，则显示目录结构以便调试
-          if [ ! -f "memory/bin/coreutils-${{ matrix.target.os }}-${{ matrix.target.arch }}$([[ "${{ matrix.target.os }}" == "windows" ]] && echo ".exe" || echo "")" ]; then
-            echo "没有找到coreutils二进制文件，显示解压后的目录结构："
-            find temp_extract -type f | sort
-            exit 1
+          else
+            if [ ! -f "memory/bin/coreutils-${{ matrix.target.name }}" ]; then
+              echo "未能找到coreutils二进制文件，显示目录结构："
+              find temp_extract -type f
+              exit 1
+            fi
           fi
       
       - name: 上传Coreutils二进制文件
