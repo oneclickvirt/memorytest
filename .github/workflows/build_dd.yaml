@@ -1,366 +1,82 @@
-name: Build dd Static Binaries
+name: Build and Package Coreutils
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Create memory/bin directory
-        run: mkdir -p memory/bin
-        
-      - name: Upload bin directory
-        uses: actions/upload-artifact@v4
-        with:
-          name: bin-directory
-          path: memory/bin/
-
   build:
-    needs: prepare
     strategy:
       matrix:
-        include:
-          # Linux builds - 主要架构
-          - os: ubuntu-latest
-            target: linux-amd64
-            goos: linux
-            goarch: amd64
-          - os: ubuntu-latest
-            target: linux-386
-            goos: linux
-            goarch: 386
-          - os: ubuntu-latest
-            target: linux-arm64
-            goos: linux
-            goarch: arm64
-          - os: ubuntu-latest
-            target: linux-armv7
-            goos: linux
-            goarch: arm
-            goarm: 7
-            
-          # Linux builds - 特殊架构
-          - os: ubuntu-latest
-            target: linux-riscv64
-            goos: linux
-            goarch: riscv64
-          - os: ubuntu-latest
-            target: linux-mips64
-            goos: linux
-            goarch: mips64
-          - os: ubuntu-latest
-            target: linux-mips64le
-            goos: linux
-            goarch: mips64le
-          - os: ubuntu-latest
-            target: linux-mips
-            goos: linux
-            goarch: mips
-          - os: ubuntu-latest
-            target: linux-mipsle
-            goos: linux
-            goarch: mipsle
-          - os: ubuntu-latest
-            target: linux-ppc64
-            goos: linux
-            goarch: ppc64
-          - os: ubuntu-latest
-            target: linux-ppc64le
-            goos: linux
-            goarch: ppc64le
-            
-          # macOS builds
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        arch: [amd64, arm64, 386]
+        exclude:
           - os: macos-latest
-            target: darwin-amd64
-            goos: darwin
-            goarch: amd64
-          - os: macos-latest
-            target: darwin-arm64
-            goos: darwin
-            goarch: arm64
-      fail-fast: false  # 确保即使某个任务失败，其他任务仍然继续
-
+            arch: 386
+          - os: windows-latest
+            arch: arm64
     runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download bin directory
-        uses: actions/download-artifact@v4
-        with:
-          name: bin-directory
-          path: memory/bin/
-          
-      - name: Setup build environment (Linux)
-        if: runner.os == 'Linux'
+      - name: Set Architecture Mapping
+        id: arch_map
         run: |
-          sudo apt-get update
-          # 安装coreutils所需的所有依赖项
-          sudo apt-get install -y \
-            build-essential \
-            autoconf \
-            automake \
-            autopoint \
-            gettext \
-            texinfo \
-            bison \
-            gperf \
-            help2man \
-            m4 \
-            perl \
-            tar \
-            wget \
-            xz-utils \
-            git \
-            curl \
-            libc6-dev
-          
-          # 安装交叉编译工具链
-          if [[ "${{ matrix.target }}" != "linux-amd64" ]]; then
-            echo "Installing cross-compilation toolchains for ${{ matrix.target }}"
-            
-            if [[ "${{ matrix.target }}" == "linux-386" ]]; then
-              sudo apt-get install -y gcc-multilib
-            elif [[ "${{ matrix.target }}" == "linux-arm64" ]]; then
-              sudo apt-get install -y gcc-aarch64-linux-gnu
-            elif [[ "${{ matrix.target }}" == "linux-armv7" ]]; then
-              sudo apt-get install -y gcc-arm-linux-gnueabihf
-            elif [[ "${{ matrix.target }}" == "linux-riscv64" ]]; then
-              sudo apt-get install -y gcc-riscv64-linux-gnu
-            elif [[ "${{ matrix.target }}" == "linux-mips64" ]]; then
-              sudo apt-get install -y gcc-mips64-linux-gnuabi64
-            elif [[ "${{ matrix.target }}" == "linux-mips64le" ]]; then
-              sudo apt-get install -y gcc-mips64el-linux-gnuabi64
-            elif [[ "${{ matrix.target }}" == "linux-mips" ]]; then
-              sudo apt-get install -y gcc-mips-linux-gnu
-            elif [[ "${{ matrix.target }}" == "linux-mipsle" ]]; then
-              sudo apt-get install -y gcc-mipsel-linux-gnu
-            elif [[ "${{ matrix.target }}" == "linux-ppc64" ]]; then
-              sudo apt-get install -y gcc-powerpc64-linux-gnu
-            elif [[ "${{ matrix.target }}" == "linux-ppc64le" ]]; then
-              sudo apt-get install -y gcc-powerpc64le-linux-gnu
-            fi
-          fi
-
-      - name: Check glibc version
-        if: runner.os == 'Linux'
-        run: ldd --version
-
-      - name: Setup build environment (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew install \
-            autoconf \
-            automake \
-            gettext \
-            texinfo \
-            bison \
-            gperf \
-            help2man \
-            m4 \
-            perl \
-            gnu-tar \
-            wget \
-            xz \
-            make \
-            curl
-          
-          # 确保GNU工具在PATH中可用
-          echo 'export PATH="/usr/local/opt/gettext/bin:$PATH"' >> ~/.bash_profile
-          source ~/.bash_profile
-
-      - name: Download and prepare coreutils with gnulib
-        run: |
-          # 下载 coreutils 源代码
-          wget -q https://ftp.gnu.org/gnu/coreutils/coreutils-9.5.tar.xz
-          tar xf coreutils-9.5.tar.xz
-          mv coreutils-9.5 coreutils
-          cd coreutils
-          
-          # 克隆完整的 gnulib
-          echo "Cloning full gnulib repository..."
-          git clone https://github.com/coreutils/gnulib.git gnulib
-          cd gnulib
-          git checkout master
-          cd ..
-          
-          # 确保 gnulib 可用
-          ls -la gnulib
-          
-          # 运行 bootstrap
-          export GNULIB_SRCDIR=$(pwd)/gnulib
-          ./bootstrap || {
-            echo "Bootstrap failed, trying autoreconf..."
-            autoreconf -fiv
-          }
+          case "${{ matrix.arch }}" in
+            amd64)  ARCH_ALIAS=x86_64 ;;
+            arm64)  ARCH_ALIAS=aarch64 ;;
+            386)    ARCH_ALIAS=i686 ;;
+            *)      echo "Unsupported architecture" && exit 1 ;;
+          esac
+          echo "ARCH_ALIAS=$ARCH_ALIAS" >> $GITHUB_ENV
         shell: bash
 
-      - name: Build dd static binary (Linux - amd64)
-        if: matrix.target == 'linux-amd64'
+      - name: Download Coreutils
         run: |
-          cd coreutils
-          # 配置，只启用dd，禁用所有其他程序
-          ./configure CFLAGS="-O2" LDFLAGS="-static" \
-            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
-          # 编译
-          make -j$(nproc) src/dd
-          # 将dd文件复制到输出目录
-          strip src/dd
-          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
-        continue-on-error: true
-
-      - name: Build dd static binary (Linux - 386)
-        if: matrix.target == 'linux-386'
-        run: |
-          cd coreutils
-          # 配置，只启用dd，禁用所有其他程序
-          CFLAGS="-m32 -O2" LDFLAGS="-m32 -static" ./configure \
-            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
-          # 编译
-          make -j$(nproc) src/dd
-          # 将dd文件复制到输出目录
-          strip src/dd
-          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
-        continue-on-error: true
-
-      - name: Build dd static binary (Linux - ARM64)
-        if: matrix.target == 'linux-arm64'
-        run: |
-          cd coreutils
-          # 配置，只启用dd，禁用所有其他程序
-          CC=aarch64-linux-gnu-gcc ./configure --host=aarch64-linux-gnu \
-            CFLAGS="-O2" LDFLAGS="-static" \
-            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
-          # 编译
-          make -j$(nproc) src/dd
-          # 将dd文件复制到输出目录
-          aarch64-linux-gnu-strip src/dd
-          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
-        continue-on-error: true
-
-      - name: Build dd static binary (Linux - ARMv7)
-        if: matrix.target == 'linux-armv7'
-        run: |
-          cd coreutils
-          # 配置，只启用dd，禁用所有其他程序
-          CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnueabihf \
-            CFLAGS="-O2" LDFLAGS="-static" \
-            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
-          # 编译
-          make -j$(nproc) src/dd
-          # 将dd文件复制到输出目录
-          arm-linux-gnueabihf-strip src/dd
-          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}v${{ matrix.goarm }}
-        continue-on-error: true
-
-      - name: Build dd static binary (Linux - Special Architectures)
-        if: startsWith(matrix.target, 'linux-') && !contains(matrix.target, 'amd64') && !contains(matrix.target, '386') && !contains(matrix.target, 'arm')
-        run: |
-          cd coreutils
+          case "${{ matrix.os }}" in
+            ubuntu-latest)
+              OS=linux
+              EXT=tar.gz
+              ;;
+            macos-latest)
+              OS=darwin
+              EXT=tar.gz
+              ;;
+            windows-latest)
+              OS=windows
+              EXT=zip
+              ;;
+            *)
+              echo "Unsupported OS" && exit 1
+              ;;
+          esac
           
-          # 选择合适的交叉编译器和主机平台
-          if [[ "${{ matrix.target }}" == "linux-riscv64" ]]; then
-            CROSS_CC=riscv64-linux-gnu-gcc
-            HOST=riscv64-linux-gnu
-            STRIP=riscv64-linux-gnu-strip
-          elif [[ "${{ matrix.target }}" == "linux-mips64" ]]; then
-            CROSS_CC=mips64-linux-gnuabi64-gcc
-            HOST=mips64-linux-gnuabi64
-            STRIP=mips64-linux-gnuabi64-strip
-          elif [[ "${{ matrix.target }}" == "linux-mips64le" ]]; then
-            CROSS_CC=mips64el-linux-gnuabi64-gcc
-            HOST=mips64el-linux-gnuabi64
-            STRIP=mips64el-linux-gnuabi64-strip
-          elif [[ "${{ matrix.target }}" == "linux-mips" ]]; then
-            CROSS_CC=mips-linux-gnu-gcc
-            HOST=mips-linux-gnu
-            STRIP=mips-linux-gnu-strip
-          elif [[ "${{ matrix.target }}" == "linux-mipsle" ]]; then
-            CROSS_CC=mipsel-linux-gnu-gcc
-            HOST=mipsel-linux-gnu
-            STRIP=mipsel-linux-gnu-strip
-          elif [[ "${{ matrix.target }}" == "linux-ppc64" ]]; then
-            CROSS_CC=powerpc64-linux-gnu-gcc
-            HOST=powerpc64-linux-gnu
-            STRIP=powerpc64-linux-gnu-strip
-          elif [[ "${{ matrix.target }}" == "linux-ppc64le" ]]; then
-            CROSS_CC=powerpc64le-linux-gnu-gcc
-            HOST=powerpc64le-linux-gnu
-            STRIP=powerpc64le-linux-gnu-strip
+          # 获取最新版本的 Coreutils release
+          URL="https://github.com/uutils/coreutils/releases/latest/download/coreutils-$OS-$ARCH_ALIAS.$EXT"
+          echo "Downloading $URL"
+          curl -LO $URL
+        shell: bash
+
+      - name: Extract and Rename Coreutils
+        run: |
+          # 创建目标目录
+          mkdir -p memory/bin
+          
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            unzip coreutils-*.zip
+            mv coreutils.exe memory/bin/coreutils-${{ matrix.os }}-${{ matrix.arch }}.exe
+          else
+            tar -xzf coreutils-*.tar.gz
+            mv coreutils memory/bin/coreutils-${{ matrix.os }}-${{ matrix.arch }}
           fi
-          
-          # 配置，只启用dd，禁用所有其他程序
-          CC=${CROSS_CC} ./configure --host=${HOST} \
-            CFLAGS="-O2" LDFLAGS="-static" \
-            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
-          # 编译
-          make -j$(nproc) src/dd
-          # 将dd文件复制到输出目录
-          ${STRIP} src/dd
-          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
-        continue-on-error: true
+        shell: bash
 
-      - name: Build dd static binary (macOS)
-        if: startsWith(matrix.target, 'darwin-')
-        run: |
-          cd coreutils
-          # 配置，只启用dd，禁用所有其他程序
-          ./configure \
-            CFLAGS="-O2" \
-            --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
-          # 编译
-          make -j$(sysctl -n hw.ncpu) src/dd
-          # 将dd文件复制到输出目录
-          strip src/dd
-          cp src/dd ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
-        continue-on-error: true
-
-      - name: Upload binary artifact
+      - name: Upload Coreutils binaries
         uses: actions/upload-artifact@v4
         with:
-          name: dd-${{ matrix.target }}
-          path: memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm && 'v'}}${{ matrix.goarm }}
-        continue-on-error: true
-
-  collect:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
-          
-      - name: Organize binaries
-        run: |
-          mkdir -p memory/bin/
-          
-          # 从所有单独的构建工件中复制文件到memory/bin目录
-          find artifacts/ -type f -not -path "*/bin-directory/*" -exec cp {} memory/bin/ \;
-          
-          # 列出所有收集到的二进制文件
-          echo "Successfully built binaries:"
-          ls -la memory/bin/
-          
-      - name: Upload combined bin directory
-        uses: actions/upload-artifact@v4
-        with:
-          name: dd-binaries
+          name: coreutils-binaries
           path: memory/bin/
-          
-      - name: Commit binaries to repository
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          
-          git add memory/bin/
-          git commit -m "feat: 更新 dd 静态二进制文件 [skip ci]" || echo "No changes to commit"
-          git push
-        continue-on-error: true
