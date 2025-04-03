@@ -1,0 +1,272 @@
+name: Build dd Static Binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Create memory/bin directory
+        run: mkdir -p memory/bin
+        
+      - name: Upload bin directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: bin-directory
+          path: memory/bin/
+
+  build:
+    needs: prepare
+    strategy:
+      matrix:
+        include:
+          # Linux builds - 主要架构
+          - os: ubuntu-latest
+            target: linux-amd64
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            target: linux-386
+            goos: linux
+            goarch: 386
+          - os: ubuntu-latest
+            target: linux-arm64
+            goos: linux
+            goarch: arm64
+          - os: ubuntu-latest
+            target: linux-armv7
+            goos: linux
+            goarch: arm
+            goarm: 7
+            
+          # Linux builds - 特殊架构
+          - os: ubuntu-latest
+            target: linux-riscv64
+            goos: linux
+            goarch: riscv64
+          - os: ubuntu-latest
+            target: linux-mips64
+            goos: linux
+            goarch: mips64
+          - os: ubuntu-latest
+            target: linux-mips64le
+            goos: linux
+            goarch: mips64le
+          - os: ubuntu-latest
+            target: linux-mips
+            goos: linux
+            goarch: mips
+          - os: ubuntu-latest
+            target: linux-mipsle
+            goos: linux
+            goarch: mipsle
+          - os: ubuntu-latest
+            target: linux-ppc64
+            goos: linux
+            goarch: ppc64
+          - os: ubuntu-latest
+            target: linux-ppc64le
+            goos: linux
+            goarch: ppc64le
+            
+          # macOS builds
+          - os: macos-latest
+            target: darwin-amd64
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            target: darwin-arm64
+            goos: darwin
+            goarch: arm64
+      fail-fast: false  # 确保即使某个任务失败，其他任务仍然继续
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download bin directory
+        uses: actions/download-artifact@v4
+        with:
+          name: bin-directory
+          path: memory/bin/
+
+      - name: Setup build environment (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential autoconf automake gettext texinfo bison git
+          
+          # 安装交叉编译工具链
+          if [[ "${{ matrix.target }}" != "linux-amd64" ]]; then
+            echo "Installing cross-compilation toolchains for ${{ matrix.target }}"
+            
+            if [[ "${{ matrix.target }}" == "linux-386" ]]; then
+              sudo apt-get install -y gcc-multilib
+            elif [[ "${{ matrix.target }}" == "linux-arm64" ]]; then
+              sudo apt-get install -y gcc-aarch64-linux-gnu
+            elif [[ "${{ matrix.target }}" == "linux-armv7" ]]; then
+              sudo apt-get install -y gcc-arm-linux-gnueabihf
+            elif [[ "${{ matrix.target }}" == "linux-riscv64" ]]; then
+              sudo apt-get install -y gcc-riscv64-linux-gnu
+            elif [[ "${{ matrix.target }}" == "linux-mips64" ]]; then
+              sudo apt-get install -y gcc-mips64-linux-gnuabi64
+            elif [[ "${{ matrix.target }}" == "linux-mips64le" ]]; then
+              sudo apt-get install -y gcc-mips64el-linux-gnuabi64
+            elif [[ "${{ matrix.target }}" == "linux-mips" ]]; then
+              sudo apt-get install -y gcc-mips-linux-gnu
+            elif [[ "${{ matrix.target }}" == "linux-mipsle" ]]; then
+              sudo apt-get install -y gcc-mipsel-linux-gnu
+            elif [[ "${{ matrix.target }}" == "linux-ppc64" ]]; then
+              sudo apt-get install -y gcc-powerpc64-linux-gnu
+            elif [[ "${{ matrix.target }}" == "linux-ppc64le" ]]; then
+              sudo apt-get install -y gcc-powerpc64le-linux-gnu
+            fi
+          fi
+
+      - name: Setup build environment (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install autoconf automake gettext texinfo bison make
+
+      - name: Clone coreutils repository
+        run: |
+          git clone https://github.com/coreutils/coreutils.git
+          cd coreutils
+          git checkout v9.5  # 使用最新的稳定版本，根据需要调整
+        shell: bash
+
+      - name: Build dd static binary (Linux - amd64)
+        if: matrix.target == 'linux-amd64'
+        run: |
+          cd coreutils
+          ./bootstrap
+          ./configure --enable-single-binary=dd LDFLAGS="-static"
+          make -j$(nproc)
+          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+        continue-on-error: true
+
+      - name: Build dd static binary (Linux - 386)
+        if: matrix.target == 'linux-386'
+        run: |
+          cd coreutils
+          ./bootstrap
+          CFLAGS="-m32" LDFLAGS="-m32 -static" ./configure --enable-single-binary=dd
+          make -j$(nproc)
+          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+        continue-on-error: true
+
+      - name: Build dd static binary (Linux - ARM64)
+        if: matrix.target == 'linux-arm64'
+        run: |
+          cd coreutils
+          ./bootstrap
+          CC=aarch64-linux-gnu-gcc ./configure --enable-single-binary=dd --host=aarch64-linux-gnu
+          make -j$(nproc) LDFLAGS="-static"
+          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+        continue-on-error: true
+
+      - name: Build dd static binary (Linux - ARMv7)
+        if: matrix.target == 'linux-armv7'
+        run: |
+          cd coreutils
+          ./bootstrap
+          CC=arm-linux-gnueabihf-gcc ./configure --enable-single-binary=dd --host=arm-linux-gnueabihf
+          make -j$(nproc) LDFLAGS="-static"
+          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}v${{ matrix.goarm }}
+        continue-on-error: true
+
+      - name: Build dd static binary (Linux - Special Architectures)
+        if: startsWith(matrix.target, 'linux-') && !contains(matrix.target, 'amd64') && !contains(matrix.target, '386') && !contains(matrix.target, 'arm')
+        run: |
+          cd coreutils
+          ./bootstrap
+          
+          # 选择合适的交叉编译器和主机平台
+          if [[ "${{ matrix.target }}" == "linux-riscv64" ]]; then
+            CROSS_CC=riscv64-linux-gnu-gcc
+            HOST=riscv64-linux-gnu
+          elif [[ "${{ matrix.target }}" == "linux-mips64" ]]; then
+            CROSS_CC=mips64-linux-gnuabi64-gcc
+            HOST=mips64-linux-gnuabi64
+          elif [[ "${{ matrix.target }}" == "linux-mips64le" ]]; then
+            CROSS_CC=mips64el-linux-gnuabi64-gcc
+            HOST=mips64el-linux-gnuabi64
+          elif [[ "${{ matrix.target }}" == "linux-mips" ]]; then
+            CROSS_CC=mips-linux-gnu-gcc
+            HOST=mips-linux-gnu
+          elif [[ "${{ matrix.target }}" == "linux-mipsle" ]]; then
+            CROSS_CC=mipsel-linux-gnu-gcc
+            HOST=mipsel-linux-gnu
+          elif [[ "${{ matrix.target }}" == "linux-ppc64" ]]; then
+            CROSS_CC=powerpc64-linux-gnu-gcc
+            HOST=powerpc64-linux-gnu
+          elif [[ "${{ matrix.target }}" == "linux-ppc64le" ]]; then
+            CROSS_CC=powerpc64le-linux-gnu-gcc
+            HOST=powerpc64le-linux-gnu
+          fi
+          
+          CC=${CROSS_CC} ./configure --enable-single-binary=dd --host=${HOST}
+          make -j$(nproc) LDFLAGS="-static"
+          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+        continue-on-error: true
+
+      - name: Build dd static binary (macOS)
+        if: startsWith(matrix.target, 'darwin-')
+        run: |
+          cd coreutils
+          ./bootstrap
+          ./configure --enable-single-binary=dd
+          make -j$(sysctl -n hw.ncpu)
+          cp src/coreutils ../memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}
+        continue-on-error: true
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dd-${{ matrix.target }}
+          path: memory/bin/dd-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.goarm && 'v'}}${{ matrix.goarm }}
+        continue-on-error: true
+
+  collect:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          
+      - name: Organize binaries
+        run: |
+          mkdir -p memory/bin/
+          
+          # 从所有单独的构建工件中复制文件到memory/bin目录
+          find artifacts/ -type f -not -path "*/bin-directory/*" -exec cp {} memory/bin/ \;
+          
+          # 列出所有收集到的二进制文件
+          echo "Successfully built binaries:"
+          ls -la memory/bin/
+          
+      - name: Upload combined bin directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: dd-binaries
+          path: memory/bin/
+          
+      - name: Commit binaries to repository
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          git add memory/bin/
+          git commit -m "feat: 更新 dd 静态二进制文件 [skip ci]" || echo "No changes to commit"
+          git push
+        continue-on-error: true
