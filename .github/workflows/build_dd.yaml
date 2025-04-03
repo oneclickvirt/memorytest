@@ -94,7 +94,22 @@ jobs:
         with:
           name: bin-directory
           path: memory/bin/
-
+          
+      - name: Build and install newer glibc
+        if: runner.os == 'Linux'
+        run: |
+          wget http://ftp.gnu.org/gnu/libc/glibc-2.35.tar.gz
+          tar -xvzf glibc-2.35.tar.gz
+          cd glibc-2.35
+          mkdir build
+          cd build
+          ../configure --prefix=/opt/glibc-2.35
+          make -j$(nproc)
+          sudo make install
+          echo 'export LD_LIBRARY_PATH=/opt/glibc-2.35/lib:$LD_LIBRARY_PATH' >> ~/.bashrc
+          echo 'export CPATH=/opt/glibc-2.35/include:$CPATH' >> ~/.bashrc
+          source ~/.bashrc
+          
       - name: Setup build environment (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -116,8 +131,7 @@ jobs:
             wget \
             xz-utils \
             git \
-            curl \
-            libc6-dev
+            curl 
           
           # 安装交叉编译工具链
           if [[ "${{ matrix.target }}" != "linux-amd64" ]]; then
