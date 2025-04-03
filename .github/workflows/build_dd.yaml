@@ -115,7 +115,8 @@ jobs:
             tar \
             wget \
             xz-utils \
-            git
+            git \
+            curl
           
           # 安装交叉编译工具链
           if [[ "${{ matrix.target }}" != "linux-amd64" ]]; then
@@ -160,24 +161,51 @@ jobs:
             gnu-tar \
             wget \
             xz \
-            make
+            make \
+            curl
           
           # 确保GNU工具在PATH中可用
           echo 'export PATH="/usr/local/opt/gettext/bin:$PATH"' >> ~/.bash_profile
           source ~/.bash_profile
 
-      - name: Clone coreutils repository
+      - name: Download and prepare coreutils with gnulib
         run: |
-          git clone https://github.com/coreutils/coreutils.git
+          # 下载coreutils源代码
+          wget -q https://ftp.gnu.org/gnu/coreutils/coreutils-9.5.tar.xz
+          tar xf coreutils-9.5.tar.xz
+          mv coreutils-9.5 coreutils
           cd coreutils
-          git checkout v9.5  # 使用最新的稳定版本，根据需要调整
+          
+          # 手动下载gnulib (使用GitHub镜像)
+          echo "Downloading gnulib from GitHub mirror..."
+          git clone --depth 1 https://github.com/coreutils/gnulib.git gnulib || {
+            echo "GitHub mirror failed, trying GitLab mirror..."
+            git clone --depth 1 https://gitlab.com/gnu/gnulib.git gnulib || {
+              echo "Direct download of gnulib archive..."
+              mkdir -p gnulib
+              curl -L -o gnulib.tar.gz https://github.com/coreutils/gnulib/archive/refs/heads/master.tar.gz
+              tar -xzf gnulib.tar.gz --strip-components=1 -C gnulib
+            }
+          }
+          
+          # 确保gnulib模块已正确安装
+          ls -la gnulib
+          
+          # 运行bootstrap脚本，使用本地gnulib
+          export GNULIB_SRCDIR=$(pwd)/gnulib
+          ./bootstrap || {
+            echo "Bootstrap failed, trying alternative bootstrap method..."
+            ./autogen.sh || {
+              echo "Creating configure script manually..."
+              autoreconf -fiv
+            }
+          }
         shell: bash
 
       - name: Build dd static binary (Linux - amd64)
         if: matrix.target == 'linux-amd64'
         run: |
           cd coreutils
-          ./bootstrap
           # 配置，只启用dd，禁用所有其他程序
           ./configure CFLAGS="-O2" LDFLAGS="-static" \
             --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
@@ -192,7 +220,6 @@ jobs:
         if: matrix.target == 'linux-386'
         run: |
           cd coreutils
-          ./bootstrap
           # 配置，只启用dd，禁用所有其他程序
           CFLAGS="-m32 -O2" LDFLAGS="-m32 -static" ./configure \
             --enable-no-install-program=arch,base32,base64,basename,cat,chcon,chgrp,chmod,chown,chroot,cksum,comm,cp,csplit,cut,date,df,dir,dircolors,dirname,du,echo,env,expand,expr,factor,false,fmt,fold,groups,head,hostid,hostname,id,install,join,kill,link,ln,logname,ls,md5sum,mkdir,mkfifo,mknod,mktemp,mv,nice,nl,nohup,nproc,numfmt,od,paste,pathchk,pinky,pr,printenv,printf,ptx,pwd,readlink,realpath,rm,rmdir,runcon,seq,sha1sum,sha224sum,sha256sum,sha384sum,sha512sum,shred,shuf,sleep,sort,split,stat,stdbuf,stty,sum,sync,tac,tail,tee,test,timeout,touch,tr,true,truncate,tsort,tty,uname,unexpand,uniq,unlink,uptime,users,vdir,wc,who,whoami,yes
@@ -207,7 +234,6 @@ jobs:
         if: matrix.target == 'linux-arm64'
         run: |
           cd coreutils
-          ./bootstrap
           # 配置，只启用dd，禁用所有其他程序
           CC=aarch64-linux-gnu-gcc ./configure --host=aarch64-linux-gnu \
             CFLAGS="-O2" LDFLAGS="-static" \
@@ -223,7 +249,6 @@ jobs:
         if: matrix.target == 'linux-armv7'
         run: |
           cd coreutils
-          ./bootstrap
           # 配置，只启用dd，禁用所有其他程序
           CC=arm-linux-gnueabihf-gcc ./configure --host=arm-linux-gnueabihf \
             CFLAGS="-O2" LDFLAGS="-static" \
@@ -239,7 +264,6 @@ jobs:
         if: startsWith(matrix.target, 'linux-') && !contains(matrix.target, 'amd64') && !contains(matrix.target, '386') && !contains(matrix.target, 'arm')
         run: |
           cd coreutils
-          ./bootstrap
           
           # 选择合适的交叉编译器和主机平台
           if [[ "${{ matrix.target }}" == "linux-riscv64" ]]; then
@@ -287,7 +311,6 @@ jobs:
         if: startsWith(matrix.target, 'darwin-')
         run: |
           cd coreutils
-          ./bootstrap
           # 配置，只启用dd，禁用所有其他程序
           ./configure \
             CFLAGS="-O2" \
