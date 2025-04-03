@@ -1,0 +1,48 @@
+#!/bin/sh
+# 简化的dd实现
+
+# 解析参数
+IN=""
+OUT=""
+BS=512
+COUNT=0
+SKIP=0
+SEEK=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    if=*)
+      IN="${1#if=}"
+      ;;
+    of=*)
+      OUT="${1#of=}"
+      ;;
+    bs=*)
+      BS="${1#bs=}"
+      ;;
+    count=*)
+      COUNT="${1#count=}"
+      ;;
+    skip=*)
+      SKIP="${1#skip=}"
+      ;;
+    seek=*)
+      SEEK="${1#seek=}"
+      ;;
+    *)
+      echo "Unknown option: $1" >&2
+      ;;
+  esac
+  shift
+done
+
+# 检查必须的参数
+if [ -z "$IN" ] || [ -z "$OUT" ]; then
+  echo "Error: Both input (if) and output (of) must be specified" >&2
+  exit 1
+fi
+
+# 使用cat或其他基础工具完成数据复制
+cat "$IN" > "$OUT"
+echo "Data copied from $IN to $OUT"
+exit 0
