@@ -58,7 +58,7 @@ Usage: memorytest [options]
   -v    show version
 ```
 
-有环境依赖，Linux/Unix相关系统请确保本地至少安装有```dd```或```sysbench```工具其中之一，更多架构请查看 https://github.com/oneclickvirt/memorytest/releases/tag/output
+更多架构请查看 https://github.com/oneclickvirt/memorytest/releases/tag/output
 
 sysbench测试
 
