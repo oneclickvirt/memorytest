@@ -61,18 +61,6 @@ Usage: memorytest [options]
 
 更多架构请查看 https://github.com/oneclickvirt/memorytest/releases/tag/output
 
-sysbench测试
-
-![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/741689a2-7887-4cec-9df5-c8e309b2dd84)
-
-dd测试
-
-![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/34de9add-dbf6-44dd-91cc-b7102de66d3f)
-
-winsat测试
-
-![1716466171182](https://github.com/oneclickvirt/memoryTest/assets/103393591/c8d38d4e-7357-4c27-b55b-4703805a5cb9)
-
 ## 卸载
 
 ```
@@ -85,3 +73,18 @@ rm -rf /usr/bin/memorytest
 ```
 go get github.com/oneclickvirt/memorytest@v0.0.5-20250404130028
 ```
+
+## 测试图
+
+sysbench测试
+
+![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/741689a2-7887-4cec-9df5-c8e309b2dd84)
+
+dd测试
+
+![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/34de9add-dbf6-44dd-91cc-b7102de66d3f)
+
+winsat测试
+
+![1716466171182](https://github.com/oneclickvirt/memoryTest/assets/103393591/c8d38d4e-7357-4c27-b55b-4703805a5cb9)
+
