@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/oneclickvirt/dd v0.0.1-20250404122614 h1:F+iv/lnui2FPKLIh1Hkhqi1DB9YNzGaux/fGEsCZ6mA=
-github.com/oneclickvirt/dd v0.0.1-20250404122614/go.mod h1:tImu9sPTkLWo2tf1dEN1xQzrylWKauj9hbU8PHfyAeU=
+github.com/oneclickvirt/dd v0.0.1-20250404124549 h1:QT2QJaMoZabUijqN2a/vzC13ILeKwQR3vatFZxKszW0=
+github.com/oneclickvirt/dd v0.0.1-20250404124549/go.mod h1:tImu9sPTkLWo2tf1dEN1xQzrylWKauj9hbU8PHfyAeU=
 github.com/oneclickvirt/defaultset v0.0.2-20240624082446 h1:5Pg3mK/u/vQvSz7anu0nxzrNdELi/AcDAU1mMsmPzyc=
 github.com/oneclickvirt/defaultset v0.0.2-20240624082446/go.mod h1:e9Jt4tf2sbemCtc84/XgKcHy9EZ2jkc5x2sW1NiJS+E=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
