@@ -8,9 +8,10 @@
 
 # 功能(Features)
 
-- [x] 使用```sysbench```测试内存的顺序读写IO
-- [x] 使用```dd```测试内存的读写IO，支持Go自身依赖注入[dd](https://github.com/oneclickvirt/dd)，使用时可无外部依赖
-- [x] 使用```winsat```测试内存的读写性能
+- [x] 支持使用```sysbench```测试内存的顺序读写IO
+- [x] 支持使用```dd```测试内存的读写IO
+- [x] 支持使用```winsat```测试内存的读写性能
+- [x] 支持Go自身静态依赖注入[fio](https://github.com/oneclickvirt/fio)和[dd](https://github.com/oneclickvirt/dd)，使用时无额外环境依赖需求
 - [x] 以```-l```指定输出的语言类型，可指定```zh```或```en```，默认不指定时使用中文输出
 - [x] 以```-m```指定测试的方法，可指定```sysbench```或```dd```，默认不指定时使用```sysbench```进行测试
 - [x] 全平台编译支持
