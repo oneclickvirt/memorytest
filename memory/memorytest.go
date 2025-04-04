@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/oneclickvirt/dd"
 	. "github.com/oneclickvirt/defaultset"
 )
 
@@ -166,7 +167,16 @@ func SysBenchTest(language string) string {
 func execDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (string, error) {
 	var tempText string
 	var cmd2 *exec.Cmd
-	cmd2 = exec.Command("sudo", "dd", "if="+ifKey, "of="+ofKey, "bs="+bs, "count="+blockCount)
+	ddCmd, ddPath, err := dd.GetDD()
+	defer dd.CleanDD(ddPath)
+	if err != nil {
+		return "", err
+	}
+	if ddCmd == "" {
+		return "", fmt.Errorf("execDDTest: ddCmd is NULL")
+	}
+	parts := strings.Split(ddCmd, " ")
+	cmd2 = exec.Command(parts[0], append(parts[1:], "if="+ifKey, "of="+ofKey, "bs="+bs, "count="+blockCount)...)
 	stderr2, err := cmd2.StderrPipe()
 	if err == nil {
 		if err := cmd2.Start(); err == nil {
