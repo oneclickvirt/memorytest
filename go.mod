@@ -3,7 +3,7 @@ module github.com/oneclickvirt/memorytest
 go 1.22.4
 
 require (
-	github.com/oneclickvirt/dd v0.0.1-20250404035914
+	github.com/oneclickvirt/dd v0.0.1-20250404051032
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 )
 
