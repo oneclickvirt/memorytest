@@ -67,7 +67,7 @@ func WindowsDDTest(language string) string {
 	// dd if=/dev/zero of=%TEMP%\testfile.test bs=1M count=1024
 	sizes := []string{"1024", "128", "64"}
 	for _, size := range sizes {
-		tempText, err = execDDTest("NUL", testWriteFile, "1M", size, true)
+		tempText, err = execWindowsDDTest("NUL", testWriteFile, "1M", size, true)
 		if EnableLoger {
 			Logger.Info("Write test:")
 			Logger.Info(tempText)
@@ -78,7 +78,7 @@ func WindowsDDTest(language string) string {
 		os.Remove(testWriteFile)
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
-		writeResult, err := parseOutput(tempText, language, records)
+		writeResult, err := parseWindowsOutput(tempText, language, records)
 		if err == nil {
 			if language == "en" {
 				result += "Single Seq Write Speed: "
@@ -100,9 +100,9 @@ func WindowsDDTest(language string) string {
 	}
 	// Read test - 在Windows上从临时文件读取到NUL
 	for _, size := range sizes {
-		tempText, err = execDDTest(testWriteFile, "NUL", "1M", size, false)
+		tempText, err = execWindowsDDTest(testWriteFile, "NUL", "1M", size, false)
 		if err != nil || strings.Contains(tempText, "Invalid argument") || strings.Contains(tempText, "Permission denied") {
-			tempText, _ = execDDTest(testWriteFile, testReadFile, "1M", size, false)
+			tempText, _ = execWindowsDDTest(testWriteFile, testReadFile, "1M", size, false)
 		}
 		if EnableLoger {
 			Logger.Info("Read test:")
@@ -114,7 +114,7 @@ func WindowsDDTest(language string) string {
 		os.Remove(testReadFile)
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
-		readResult, err := parseOutput(tempText, language, records)
+		readResult, err := parseWindowsOutput(tempText, language, records)
 		if err == nil {
 			if language == "en" {
 				result += "Single Seq Read  Speed: "

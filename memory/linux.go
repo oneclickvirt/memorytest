@@ -68,7 +68,6 @@ func SysBenchTest(language string) string {
 			testReadOps, testReadSpeed, testWriteOps, testWriteSpeed float64
 			mibReadFlag, mibWriteFlag                                bool
 		)
-		// 统一的结果处理函数
 		processResult := func(result string) (float64, float64, bool) {
 			var ops, speed float64
 			var mibFlag bool
@@ -107,7 +106,6 @@ func SysBenchTest(language string) string {
 			}
 			return ops, speed, mibFlag
 		}
-		// 读测试
 		readResult, err := runSysBenchCommand("1", "read", "5", version)
 		if err != nil {
 			if EnableLoger {
@@ -118,7 +116,6 @@ func SysBenchTest(language string) string {
 			testReadOps, testReadSpeed, mibReadFlag = processResult(readResult)
 		}
 		time.Sleep(700 * time.Millisecond)
-		// 写测试
 		writeResult, err := runSysBenchCommand("1", "write", "5", version)
 		if err != nil {
 			if EnableLoger {
@@ -128,8 +125,6 @@ func SysBenchTest(language string) string {
 		} else {
 			testWriteOps, testWriteSpeed, mibWriteFlag = processResult(writeResult)
 		}
-		// 计算和匹配格式
-		// 写
 		if mibWriteFlag {
 			testWriteSpeed = testWriteSpeed / 1048576 * 1000000
 		}
@@ -275,24 +270,38 @@ func DDTest(language string) string {
 	var err error
 	var tempText string
 	var records float64 = 1024.0
+	testFileName := fmt.Sprintf("/dev/shm/testfile_%d.test", time.Now().UnixNano())
+	readTestFileName := fmt.Sprintf("/tmp/testfile_read_%d.test", time.Now().UnixNano())
+	defer func() {
+		os.Remove(testFileName)
+		os.Remove(readTestFileName)
+	}()
 	// Write test
 	// sudo dd if=/dev/zero of=/dev/shm/testfile.test bs=1M count=1024
 	sizes := []string{"1024", "128"}
+	writeSuccess := false
 	for _, size := range sizes {
-		tempText, err = execDDTest("/dev/zero", "/dev/shm/testfile.test", "1M", size, true)
-		defer os.Remove("/dev/shm/testfile.test")
+		os.Remove(testFileName)
+		tempText, err = execDDTest("/dev/zero", testFileName, "1M", size, true)
 		if EnableLoger {
 			Logger.Info("Write test:")
 			Logger.Info(tempText)
 		}
 		if err == nil {
+			writeSuccess = true
 			break
 		}
-		os.Remove("/dev/shm/testfile.test")
+		os.Remove(testFileName)
+	}
+	if !writeSuccess {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		return ""
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
-		writeResult, err := parseOutput(tempText, language, records)
-		if err == nil {
+		writeResult, parseErr := parseOutput(tempText, language, records)
+		if parseErr == nil {
 			if language == "en" {
 				result += "Single Seq Write Speed: "
 			} else {
@@ -301,7 +310,7 @@ func DDTest(language string) string {
 			result += writeResult
 		} else {
 			if EnableLoger {
-				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", err.Error()))
+				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", parseErr.Error()))
 			}
 			return ""
 		}
@@ -311,25 +320,32 @@ func DDTest(language string) string {
 		}
 		return ""
 	}
-	// Read test
+	readSuccess := false
 	for _, size := range sizes {
-		tempText, err = execDDTest("/dev/shm/testfile.test", "/dev/null", "1M", size, false)
+		tempText, err = execDDTest(testFileName, "/dev/null", "1M", size, false)
 		if err != nil || strings.Contains(tempText, "Invalid argument") || strings.Contains(tempText, "Permission denied") {
-			tempText, _ = execDDTest("/dev/shm/testfile.test", "/tmp/testfile_read.test", "1M", size, false)
-			defer os.Remove("/tmp/testfile_read.test")
+			os.Remove(readTestFileName)
+			tempText, err = execDDTest(testFileName, readTestFileName, "1M", size, false)
 		}
 		if EnableLoger {
 			Logger.Info("Read test:")
 			Logger.Info(tempText)
 		}
 		if err == nil {
+			readSuccess = true
 			break
 		}
-		os.Remove("/tmp/testfile_read.test")
+		os.Remove(readTestFileName)
+	}
+	if !readSuccess {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		return ""
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
-		readResult, err := parseOutput(tempText, language, records)
-		if err == nil {
+		readResult, parseErr := parseOutput(tempText, language, records)
+		if parseErr == nil {
 			if language == "en" {
 				result += "Single Seq Read  Speed: "
 			} else {
@@ -338,7 +354,7 @@ func DDTest(language string) string {
 			result += readResult
 		} else {
 			if EnableLoger {
-				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", err.Error()))
+				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", parseErr.Error()))
 			}
 			return ""
 		}
