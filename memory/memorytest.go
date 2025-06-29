@@ -26,7 +26,7 @@ func simpleMemoryTest(language string) string {
 	availableMemoryMB := float64(m.Sys-m.HeapInuse-m.StackInuse) / 1024 / 1024
 	testSizeMB := availableMemoryMB - 50
 	if testSizeMB < 10 {
-		testSizeMB = 10
+		testSizeMB = 256
 	}
 	var buffer []byte
 	var allocatedSize int
