@@ -23,7 +23,7 @@ func main() {
 	memorytestFlag.BoolVar(&help, "h", false, "Show help information")
 	memorytestFlag.BoolVar(&showVersion, "v", false, "show version")
 	memorytestFlag.StringVar(&language, "l", "", "Language parameter (en or zh)")
-	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (sysbench or dd)")
+	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (sysbench or dd or winsat)")
 	memorytestFlag.BoolVar(&memory.EnableLoger, "log", false, "Enable logging")
 	memorytestFlag.Parse(os.Args[1:])
 	if help {
@@ -31,6 +31,7 @@ func main() {
 		memorytestFlag.PrintDefaults()
 		return
 	}
+
 	if showVersion {
 		fmt.Println(memory.MemoryTestVersion)
 		return
@@ -41,16 +42,45 @@ func main() {
 	} else {
 		language = strings.ToLower(language)
 	}
+
 	if testMethod == "" || strings.ToLower(testMethod) == "sysbench" {
 		testMethod = "sysbench"
 	} else if strings.ToLower(testMethod) == "dd" {
 		testMethod = "dd"
 	}
 	if runtime.GOOS == "windows" {
-		if testMethod != "winsat" && testMethod != "" {
-			res = "Detected host is Windows, using Winsat for testing.\n"
+		switch testMethod {
+		case "dd":
+			// 在Windows环境下使用DD测试
+			res = memory.WindowsDDTest(language)
+			// 如果DD测试失败或结果为空，回退到winsat
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "DD test failed, switching to Winsat for testing.\n"
+				} else {
+					res = "DD测试失败，切换使用Winsat进行测试。\n"
+				}
+				res += memory.WinsatTest(language)
+			}
+		case "sysbench":
+			// sysbench在Windows下不支持，提示并使用winsat
+			if language == "en" {
+				res = "Sysbench is not supported on Windows, using Winsat for testing.\n"
+			} else {
+				res = "Windows下不支持Sysbench，使用Winsat进行测试。\n"
+			}
+			res += memory.WinsatTest(language)
+		default:
+			// 默认情况或winsat方法
+			if testMethod != "winsat" && testMethod != "" {
+				if language == "en" {
+					res = "Detected host is Windows, using Winsat for testing.\n"
+				} else {
+					res = "检测到主机为Windows，使用Winsat进行测试。\n"
+				}
+			}
+			res += memory.WinsatTest(language)
 		}
-		res += memory.WinsatTest(language)
 	} else {
 		switch testMethod {
 		case "sysbench":
