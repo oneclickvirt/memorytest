@@ -1,11 +1,14 @@
 package memory
 
+// #cgo CFLAGS: -std=c99
+// #include "memory.h"
+import "C"
 import (
 	"fmt"
 	"os"
 	"runtime"
 	"strconv"
-	"time"
+	"unsafe"
 
 	. "github.com/oneclickvirt/defaultset"
 )
@@ -18,70 +21,49 @@ func hasRootPermission() bool {
 	return os.Getuid() == 0
 }
 
-// simpleMemoryTest 无root权限时模拟测试
+// simpleMemoryTest CGO优化版本
 func simpleMemoryTest(language string) string {
 	if EnableLoger {
-		Logger.Info("Running simple memory test without root permission")
+		Logger.Info("Running CGO-optimized memory test without root permission")
 	}
 	sizes := []string{"400", "512", "1024"}
-	var buffer []byte
 	var allocatedSize int
+	var writeSpeed, readSpeed float64
+	pageSize := int(C.get_page_size())
+	var buffer unsafe.Pointer
 	for _, s := range sizes {
 		mb, err := strconv.Atoi(s)
 		if err != nil {
 			continue
 		}
 		sizeBytes := mb * 1024 * 1024
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					buffer = nil
-				}
-			}()
-			buffer = make([]byte, sizeBytes)
+		// 使用CGO分配对齐内存
+		buffer = C.aligned_malloc(C.size_t(sizeBytes), C.size_t(pageSize))
+		if buffer != nil {
 			allocatedSize = sizeBytes
-		}()
-		if buffer != nil && len(buffer) > 0 {
 			break
 		}
 	}
-	if buffer == nil || len(buffer) == 0 {
+	if buffer == nil {
 		return "Memory allocation failed. Cannot perform test.\n"
 	}
 	defer func() {
-		buffer = nil
+		C.free(buffer)
 		runtime.GC()
 	}()
-	for i := 0; i < len(buffer); i++ {
-		buffer[i] = 0
-	}
-	start := time.Now()
-	for i := 0; i < len(buffer); i++ {
-		buffer[i] = byte(i % 256)
-	}
-	writeTime := time.Since(start).Seconds()
-	writeSpeed := float64(len(buffer)) / writeTime / 1024 / 1024
-	var tmp byte
-	for i := 0; i < len(buffer); i += 4096 {
-		tmp += buffer[i]
-	}
-	start = time.Now()
-	var sum uint64
-	for i := 0; i < len(buffer); i++ {
-		sum += uint64(buffer[i])
-	}
-	readTime := time.Since(start).Seconds()
-	readSpeed := float64(len(buffer)) / readTime / 1024 / 1024
-	if tmp > 255 {
-		fmt.Println("Unlikely condition to keep tmp alive:", tmp)
-	}
+	// 清零内存
+	C.memset(buffer, 0, C.size_t(allocatedSize))
+	// 执行写入测试
+	writeSpeed = float64(C.fast_memory_write_test(buffer, C.size_t(allocatedSize)))
+	// 执行读取测试
+	readSpeed = float64(C.fast_memory_read_test(buffer, C.size_t(allocatedSize)))
 	var result string
 	allocatedMB := float64(allocatedSize) / 1024 / 1024
 	if language == "en" {
 		result += fmt.Sprintf("Note: Running without root permission, using Go memory test\n")
 		result += fmt.Sprintf("Test Buffer Size: %.1f MB\n", allocatedMB)
 		result += fmt.Sprintf("Single Seq Write Speed: %.2f MB/s\n", writeSpeed)
-		result += fmt.Sprintf("Single Seq Read  Speed: %.2f MB/s\n", readSpeed)
+		result += fmt.Sprintf("Single Seq Read Speed: %.2f MB/s\n", readSpeed)
 	} else {
 		result += fmt.Sprintf("注意: 当前无root权限，使用Go内存测试\n")
 		result += fmt.Sprintf("测试缓冲区大小: %.1f MB\n", allocatedMB)
