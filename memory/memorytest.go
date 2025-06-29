@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"strconv"
 	"time"
-
 	. "github.com/oneclickvirt/defaultset"
 )
 
@@ -23,28 +22,25 @@ func simpleMemoryTest(language string) string {
 	if EnableLoger {
 		Logger.Info("Running simple memory test without root permission")
 	}
-	sizes := []string{"1024", "128", "64"}
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	availableMemoryMB := float64(m.Sys-m.HeapInuse-m.StackInuse) / 1024 / 1024
+	testSizeMB := availableMemoryMB - 50
+	if testSizeMB < 10 {
+		testSizeMB = 10
+	}
 	var buffer []byte
 	var allocatedSize int
-	for _, s := range sizes {
-		mb, err := strconv.Atoi(s)
-		if err != nil {
-			continue
-		}
-		sizeBytes := mb * 1024 * 1024
-		func() {
-			defer func() {
-				if r := recover(); r != nil {
-					buffer = nil
-				}
-			}()
-			buffer = make([]byte, sizeBytes)
-			allocatedSize = sizeBytes
+	sizeBytes := int(testSizeMB * 1024 * 1024)
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				buffer = nil
+			}
 		}()
-		if buffer != nil && len(buffer) > 0 {
-			break
-		}
-	}
+		buffer = make([]byte, sizeBytes)
+		allocatedSize = sizeBytes
+	}()
 	if buffer == nil || len(buffer) == 0 {
 		return "Memory allocation failed. Cannot perform test.\n"
 	}
