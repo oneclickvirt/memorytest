@@ -5,6 +5,7 @@ go 1.22.4
 require (
 	github.com/oneclickvirt/dd v0.0.1-20250406062523
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
+	github.com/oneclickvirt/mbw v0.0.1-20250630124339
 )
 
 require (
