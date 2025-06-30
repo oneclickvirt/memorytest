@@ -1,12 +1,11 @@
-//go:build !windows
-// +build !windows
+//go:build windows
+// +build windows
 
 package memory
 
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -14,11 +13,20 @@ import (
 
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/mbw"
+	"golang.org/x/sys/windows"
 )
 
-// hasRootPermission 检测是否有root权限
 func hasRootPermission() bool {
-	return os.Getuid() == 0
+	sid, err := windows.CreateWellKnownSid(windows.WinBuiltinAdministratorsSid)
+	if err != nil {
+		return false
+	}
+	token := windows.Token(0)
+	member, err := token.IsMember(sid)
+	if err != nil {
+		return false
+	}
+	return member
 }
 
 // parseMBWOutput 解析 mbw 输出
