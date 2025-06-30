@@ -91,23 +91,23 @@ func simpleMemoryTest(language string) string {
 	var result strings.Builder
 	if language == "en" {
 		if speed, ok := results["MEMCPY"]; ok {
-			result.WriteString(fmt.Sprintf("Memory Copy Speed (MEMCPY)   : %8.2f MB/s \n", speed))
+			result.WriteString(fmt.Sprintf("Memory Copy Speed (MEMCPY)   : %10.2f MB/s \n", speed))
 		}
 		if speed, ok := results["DUMB"]; ok {
-			result.WriteString(fmt.Sprintf("Memory Copy Speed (DUMB)     : %8.2f MB/s \n", speed))
+			result.WriteString(fmt.Sprintf("Memory Copy Speed (DUMB)     : %10.2f MB/s \n", speed))
 		}
 		if speed, ok := results["MCBLOCK"]; ok {
-			result.WriteString(fmt.Sprintf("Memory Copy Speed (MCBLOCK)  : %8.2f MB/s \n", speed))
+			result.WriteString(fmt.Sprintf("Memory Copy Speed (MCBLOCK)  : %10.2f MB/s \n", speed))
 		}
 	} else {
 		if speed, ok := results["MEMCPY"]; ok {
-			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MEMCPY)   : %8.2f MB/s \n", speed))
+			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MEMCPY)   : %10.2f MB/s \n", speed))
 		}
 		if speed, ok := results["DUMB"]; ok {
-			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (DUMB)     : %8.2f MB/s \n", speed))
+			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (DUMB)     : %10.2f MB/s \n", speed))
 		}
 		if speed, ok := results["MCBLOCK"]; ok {
-			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MCBLOCK)  : %8.2f MB/s \n", speed))
+			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MCBLOCK)  : %10.2f MB/s \n", speed))
 		}
 	}
 	if len(results) == 0 {
