@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -38,12 +39,10 @@ func parseMBWOutput(output string) map[string]float64 {
 	return results
 }
 
-// simpleMemoryTest 使用 mbw 库进行内存测试
 func simpleMemoryTest(language string) string {
 	if EnableLoger {
 		Logger.Info("Running mbw memory test")
 	}
-	// 获取 mbw 命令
 	mbwCmd, tempFile, err := mbw.GetMBW()
 	if err != nil {
 		fmt.Println(mbwCmd, tempFile, err.Error())
@@ -56,62 +55,59 @@ func simpleMemoryTest(language string) string {
 			return "内存测试失败: mbw 命令不可用\n"
 		}
 	}
-	// 如果有临时文件，确保在函数结束时清理
-	if tempFile != "" {
-		defer func() {
-			if removeErr := os.Remove(tempFile); removeErr != nil && EnableLoger {
-				Logger.Error("Failed to remove temp file: " + removeErr.Error())
-			}
-			// 尝试删除临时目录
-			if tempDir := strings.TrimSuffix(tempFile, "/mbw-linux-amd64"); tempDir != tempFile {
-				os.Remove(tempDir)
-			}
-		}()
-	}
-	// 执行 mbw 测试
-	var cmd *exec.Cmd
-	testSize := "256" // 默认测试 256MB
-	if strings.Contains(mbwCmd, "sudo") {
-		// 包含 sudo 的情况
-		parts := strings.Fields(mbwCmd)
-		args := append(parts[1:], "-n", "5", testSize)
-		cmd = exec.Command("sudo", args...)
-	} else {
-		// 不包含 sudo 的情况
-		cmd = exec.Command(mbwCmd, "-n", "5", testSize)
-	}
-	output, err := cmd.CombinedOutput()
-	if err != nil {
+	testSizes := []string{"1024", "512", "256", "128", "64", "32"}
+	var output []byte
+	var execErr error
+	var successfulSize string
+	for _, size := range testSizes {
+		var cmd *exec.Cmd
+		if strings.Contains(mbwCmd, "sudo") {
+			parts := strings.Fields(mbwCmd)
+			args := append(parts[1:], "-n", "5", size)
+			cmd = exec.Command("sudo", args...)
+		} else {
+			cmd = exec.Command(mbwCmd, "-n", "5", size)
+		}
+		output, execErr = cmd.CombinedOutput()
+		if execErr == nil && !bytes.Contains(output, []byte("Cannot allocate memory")) {
+			successfulSize = size
+			break
+		}
 		if EnableLoger {
-			Logger.Error("Failed to execute mbw: " + err.Error())
+			Logger.Warn(fmt.Sprintf("Test with size %sMB failed: %v", size, execErr))
+		}
+	}
+	if successfulSize == "" {
+		if EnableLoger {
+			Logger.Error("All memory test sizes failed")
 		}
 		if language == "en" {
-			return "Memory test execution failed\n"
+			return "Memory test execution failed: insufficient memory\n"
 		} else {
-			return "内存测试执行失败\n"
+			return "内存测试执行失败：可用内存不足\n"
 		}
 	}
 	results := parseMBWOutput(string(output))
 	var result strings.Builder
 	if language == "en" {
 		if speed, ok := results["MEMCPY"]; ok {
-			result.WriteString(fmt.Sprintf("Memory Copy Speed (MEMCPY)   : %.2f MB/s (256 MiB)\n", speed))
+			result.WriteString(fmt.Sprintf("Memory Copy Speed (MEMCPY)   : %8.2f MB/s \n", speed))
 		}
 		if speed, ok := results["DUMB"]; ok {
-			result.WriteString(fmt.Sprintf("Memory Copy Speed (DUMB)     : %.2f MB/s (256 MiB)\n", speed))
+			result.WriteString(fmt.Sprintf("Memory Copy Speed (DUMB)     : %8.2f MB/s \n", speed))
 		}
 		if speed, ok := results["MCBLOCK"]; ok {
-			result.WriteString(fmt.Sprintf("Memory Copy Speed (MCBLOCK)  : %.2f MB/s (256 MiB)\n", speed))
+			result.WriteString(fmt.Sprintf("Memory Copy Speed (MCBLOCK)  : %8.2f MB/s \n", speed))
 		}
 	} else {
 		if speed, ok := results["MEMCPY"]; ok {
-			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MEMCPY)   : %.2f MB/s (256 MiB)\n", speed))
+			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MEMCPY)   : %8.2f MB/s \n", speed))
 		}
 		if speed, ok := results["DUMB"]; ok {
-			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (DUMB)     : %.2f MB/s (256 MiB)\n", speed))
+			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (DUMB)     : %8.2f MB/s \n", speed))
 		}
 		if speed, ok := results["MCBLOCK"]; ok {
-			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MCBLOCK)  : %.2f MB/s (256 MiB)\n", speed))
+			result.WriteString(fmt.Sprintf("内存复制速度(读+写) (MCBLOCK)  : %8.2f MB/s \n", speed))
 		}
 	}
 	if len(results) == 0 {
