@@ -81,3 +81,8 @@ winsat测试
 
 ![1716466171182](https://github.com/oneclickvirt/memoryTest/assets/103393591/c8d38d4e-7357-4c27-b55b-4703805a5cb9)
 
+mbw测试
+
+![f4cc8695e41070f9c393071c49315464](https://github.com/user-attachments/assets/10538fb0-3d4e-4118-b248-8ccfd6a09e24)
+
+
