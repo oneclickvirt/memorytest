@@ -1,5 +1,5 @@
 package memory
 
-const MemoryTestVersion = "v0.0.6"
+const MemoryTestVersion = "v0.0.7"
 
 var EnableLoger = false

@@ -17,6 +17,14 @@ func WinsatTest(language string) string {
 		InitLogger()
 		defer Logger.Sync()
 	}
+	if !hasRootPermission() {
+		if language == "en" {
+			fmt.Println("Current system detected no admin permission")
+		} else {
+			fmt.Println("当前检测到系统无admin权限")
+		}
+		return simpleMemoryTest(language)
+	}
 	var result string
 	cmd := exec.Command("winsat", "mem")
 	output, err := cmd.Output()
@@ -48,6 +56,14 @@ func WindowsDDTest(language string) string {
 	if EnableLoger {
 		InitLogger()
 		defer Logger.Sync()
+	}
+	if !hasRootPermission() {
+		if language == "en" {
+			fmt.Println("Current system detected no admin permission")
+		} else {
+			fmt.Println("当前检测到系统无admin权限")
+		}
+		return simpleMemoryTest(language)
 	}
 	var result string
 	var err error

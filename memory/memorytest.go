@@ -1,12 +1,8 @@
-//go:build !windows
-// +build !windows
-
 package memory
 
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -15,11 +11,6 @@ import (
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/mbw"
 )
-
-// hasRootPermission 检测是否有root权限
-func hasRootPermission() bool {
-	return os.Getuid() == 0
-}
 
 // parseMBWOutput 解析 mbw 输出
 func parseMBWOutput(output string) map[string]float64 {

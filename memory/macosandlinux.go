@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -50,7 +49,7 @@ func SysBenchTest(language string) string {
 		InitLogger()
 		defer Logger.Sync()
 	}
-	if runtime.GOOS != "windows" && !hasRootPermission() {
+	if !hasRootPermission() {
 		if language == "en" {
 			fmt.Println("Current system detected no root permission")
 		} else {
@@ -258,7 +257,7 @@ func DDTest(language string) string {
 		InitLogger()
 		defer Logger.Sync()
 	}
-	if runtime.GOOS != "windows" && !hasRootPermission() {
+	if !hasRootPermission() {
 		if language == "en" {
 			fmt.Println("Current system detected no root permission")
 		} else {
