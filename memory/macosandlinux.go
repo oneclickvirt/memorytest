@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -252,6 +254,92 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 	return result, nil
 }
 
+// 创建macOS RAM磁盘
+func createMacOSRamDisk() (string, string, error) {
+	// 创建512MB的RAM磁盘
+	cmd := exec.Command("hdiutil", "attach", "-nomount", "ram://1048576") // 512MB = 1048576 * 512 bytes
+	output, err := cmd.Output()
+	if err != nil {
+		return "", "", err
+	}
+	diskName := strings.TrimSpace(string(output))
+	// 格式化RAM磁盘
+	mountPoint := "/Volumes/RAMDisk"
+	cmd = exec.Command("diskutil", "erasevolume", "HFS+", "RAMDisk", diskName)
+	if err := cmd.Run(); err != nil {
+		// 如果格式化失败，清理已创建的磁盘
+		exec.Command("diskutil", "eject", diskName).Run()
+		return "", "", err
+	}
+	return mountPoint, diskName, nil
+}
+
+// 卸载macOS RAM磁盘
+func unmountMacOSRamDisk(mountPoint, diskName string) error {
+	var lastErr error
+	// 通过挂载点卸载
+	cmd := exec.Command("diskutil", "unmount", mountPoint)
+	if err := cmd.Run(); err != nil {
+		lastErr = err
+		// 强制卸载挂载点
+		cmd = exec.Command("diskutil", "unmount", "force", mountPoint)
+		if err := cmd.Run(); err != nil {
+			lastErr = err
+			// 方法3: 通过设备名弹出
+			if diskName != "" {
+				cmd = exec.Command("diskutil", "eject", diskName)
+				if err := cmd.Run(); err != nil {
+					lastErr = err
+				} else {
+					return nil // 成功
+				}
+			}
+			// 通过hdiutil分离
+			if diskName != "" {
+				cmd = exec.Command("hdiutil", "detach", diskName)
+				if err := cmd.Run(); err != nil {
+					lastErr = err
+				} else {
+					return nil // 成功
+				}
+			}
+		} else {
+			return nil // 成功
+		}
+	} else {
+		return nil // 成功
+	}
+	return lastErr
+}
+
+// 获取内存文件系统目录
+func getMemoryDir() (string, func(), error) {
+	switch runtime.GOOS {
+	case "darwin":
+		// macOS: 创建RAM磁盘
+		ramDisk, diskName, err := createMacOSRamDisk()
+		if err != nil {
+			// 如果创建RAM磁盘失败，返回错误
+			return "", nil, fmt.Errorf("failed to create RAM disk: %v", err)
+		}
+		cleanup := func() {
+			if err := unmountMacOSRamDisk(ramDisk, diskName); err != nil {
+				fmt.Printf("Warning: Failed to cleanup RAM disk: %v\n", err)
+			}
+		}
+		return ramDisk, cleanup, nil
+	case "linux":
+		// Linux: 使用/dev/shm
+		if _, err := os.Stat("/dev/shm"); err == nil {
+			return "/dev/shm", func() {}, nil
+		}
+		return "", nil, fmt.Errorf("/dev/shm not available")
+
+	default:
+		return "", nil, fmt.Errorf("unsupported OS for memory testing")
+	}
+}
+
 func DDTest(language string) string {
 	if EnableLoger {
 		InitLogger()
@@ -265,18 +353,30 @@ func DDTest(language string) string {
 		}
 		return simpleMemoryTest(language)
 	}
+	// 获取内存文件系统目录
+	memoryDir, cleanup, err := getMemoryDir()
+	if err != nil {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Failed to get memory directory: %v", err))
+		}
+		if language == "en" {
+			fmt.Printf("Warning: Cannot create memory filesystem, falling back to disk test: %v\n", err)
+		} else {
+			fmt.Printf("警告: 无法创建内存文件系统，回退到磁盘测试: %v\n", err)
+		}
+		return simpleMemoryTest(language)
+	}
+	defer cleanup()
 	var result string
-	var err error
 	var tempText string
 	var records float64 = 1024.0
-	testFileName := fmt.Sprintf("/dev/shm/testfile_%d.test", time.Now().UnixNano())
+	testFileName := filepath.Join(memoryDir, fmt.Sprintf("testfile_%d.test", time.Now().UnixNano()))
 	readTestFileName := fmt.Sprintf("/tmp/testfile_read_%d.test", time.Now().UnixNano())
 	defer func() {
 		os.Remove(testFileName)
 		os.Remove(readTestFileName)
 	}()
 	// Write test
-	// sudo dd if=/dev/zero of=/dev/shm/testfile.test bs=1M count=1024
 	sizes := []string{"1024", "128"}
 	writeSuccess := false
 	for _, size := range sizes {
@@ -319,6 +419,7 @@ func DDTest(language string) string {
 		}
 		return ""
 	}
+	// Read test
 	readSuccess := false
 	for _, size := range sizes {
 		tempText, err = execDDTest(testFileName, "/dev/null", "1M", size, false)
