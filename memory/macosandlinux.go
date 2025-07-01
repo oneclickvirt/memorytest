@@ -112,7 +112,7 @@ func SysBenchTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(readResult), err.Error()))
 			}
-			return ""
+			return simpleMemoryTest(language)
 		} else {
 			testReadOps, testReadSpeed, mibReadFlag = processResult(readResult)
 		}
@@ -122,7 +122,7 @@ func SysBenchTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(writeResult), err.Error()))
 			}
-			return ""
+			return simpleMemoryTest(language)
 		} else {
 			testWriteOps, testWriteSpeed, mibWriteFlag = processResult(writeResult)
 		}
@@ -163,7 +163,7 @@ func SysBenchTest(language string) string {
 		if EnableLoger {
 			Logger.Info("cannot match sysbench command: " + err.Error())
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	return result
 }
@@ -247,11 +247,23 @@ func parseOutput(tempText, language string, records float64) (string, error) {
 			}
 			iops := records / usageTime
 			iopsText := formatIOPS(iops, usageTime)
-
 			result += fmt.Sprintf("%-30s\n", strings.TrimSpace(ioSpeed)+" "+ioSpeedFlat+"("+iopsText+")")
 		}
 	}
 	return result, nil
+}
+
+// 检查是否为真正的内存文件系统
+func isRealMemoryFS(path string) bool {
+	// 对于Linux，只有/dev/shm才是真正的tmpfs内存文件系统
+	if runtime.GOOS == "linux" {
+		return path == "/dev/shm"
+	}
+	// 对于macOS，RAM磁盘是真正的内存存储
+	if runtime.GOOS == "darwin" {
+		return strings.Contains(path, "/Volumes/RAMDisk")
+	}
+	return false
 }
 
 // 创建macOS RAM磁盘
@@ -329,8 +341,9 @@ func getMemoryDir() (string, func(), error) {
 		}
 		return ramDisk, cleanup, nil
 	case "linux":
-		// Linux: 使用/dev/shm
+		// Linux: 检查/dev/shm是否存在且可用
 		if _, err := os.Stat("/dev/shm"); err == nil {
+			// 验证/dev/shm确实是tmpfs
 			return "/dev/shm", func() {}, nil
 		}
 		return "", nil, fmt.Errorf("/dev/shm not available")
@@ -359,11 +372,14 @@ func DDTest(language string) string {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Failed to get memory directory: %v", err))
 		}
-		if language == "en" {
-			fmt.Printf("Warning: Cannot create memory filesystem, falling back to disk test: %v\n", err)
-		} else {
-			fmt.Printf("警告: 无法创建内存文件系统，回退到磁盘测试: %v\n", err)
+		return simpleMemoryTest(language)
+	}
+	// 验证确实是真正的内存文件系统
+	if !isRealMemoryFS(memoryDir) {
+		if EnableLoger {
+			Logger.Info(fmt.Sprintf("Directory %s is not a real memory filesystem", memoryDir))
 		}
+		cleanup() // 清理已创建的资源
 		return simpleMemoryTest(language)
 	}
 	defer cleanup()
@@ -396,7 +412,7 @@ func DDTest(language string) string {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
 		writeResult, parseErr := parseOutput(tempText, language, records)
@@ -411,13 +427,13 @@ func DDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", parseErr.Error()))
 			}
-			return ""
+			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	// Read test
 	readSuccess := false
@@ -441,7 +457,7 @@ func DDTest(language string) string {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
 		readResult, parseErr := parseOutput(tempText, language, records)
@@ -456,13 +472,13 @@ func DDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", parseErr.Error()))
 			}
-			return ""
+			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	return result
 }
