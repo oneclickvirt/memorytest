@@ -1,5 +1,4 @@
 #define _GNU_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,32 +9,25 @@
 #include <string.h>
 #include <unistd.h>
 #include "mbw.h"
-
 #define DEFAULT_NR_LOOPS 10
 #define MAX_TESTS 3
 #define DEFAULT_BLOCK_SIZE 262144
 #define TEST_MEMCPY 0
 #define TEST_DUMB 1
 #define TEST_MCBLOCK 2
-
 #ifdef _WIN32
 #include <windows.h>
-int gettimeofday(struct timeval *tv, struct timezone *tz)
+int gettimeofday(struct timeval *tv, void *tz)
 {
     FILETIME ft;
     unsigned __int64 tmpres = 0;
-    static int tzflag;
-    if (NULL != tv)
-    {
+    if (NULL != tv) {
         GetSystemTimeAsFileTime(&ft);
-
         tmpres |= ft.dwHighDateTime;
         tmpres <<= 32;
         tmpres |= ft.dwLowDateTime;
-
         tmpres /= 10;
         tmpres -= 11644473600000000ULL;
-
         tv->tv_sec = (long)(tmpres / 1000000UL);
         tv->tv_usec = (long)(tmpres % 1000000UL);
     }
