@@ -16,7 +16,7 @@ func main() {
 	go func() {
 		http.Get("https://hits.spiritlhl.net/memorytest.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
 	}()
-	fmt.Println(Green("项目地址:"), Yellow("https://github.com/oneclickvirt/memorytest"))
+	fmt.Println(Green("Repo:"), Yellow("https://github.com/oneclickvirt/memorytest"))
 	var showVersion, help bool
 	var language, testMethod string
 	memorytestFlag := flag.NewFlagSet("cputest", flag.ContinueOnError)
