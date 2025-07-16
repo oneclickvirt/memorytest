@@ -1,8 +1,8 @@
 #ifndef MBW_H
 #define MBW_H
-
 #ifdef _WIN32
 #include <winsock2.h>
+#include <time.h>
 #ifndef _TIMEVAL_DEFINED
 #define _TIMEVAL_DEFINED
 struct timeval
@@ -11,22 +11,22 @@ struct timeval
     long tv_usec;
 };
 #endif
-
+#ifndef HAVE_STRUCT_TIMEZONE
+#define HAVE_STRUCT_TIMEZONE
 struct timezone
 {
     int tz_minuteswest;
     int tz_dsttime;
 };
-
+#endif
+#ifndef HAVE_GETTIMEOFDAY
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
-
+#endif // _WIN32
 struct TestResult
 {
     int type;
     double speed;
 };
-
 int run_memory_test(unsigned long long mt, struct TestResult *results);
-
 #endif
