@@ -8,33 +8,32 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 'stable'
-        
-    - name: Build and Test on Default Platform
-      run: |
-        go build -v ./...
-        go test -v ./...
-        
-    - name: Delete Existing Release Assets
-      run: |
-        release_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/tags/output" | jq -r '.id')
-        echo "Deleting existing release assets..."
-        assets=$(curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/oneclickvirt/memorytest/releases/$release_id/assets" | jq -r '.[] | .id')
-        for asset in $assets; do
-          echo "Deleting asset with ID: $asset"
-          curl -X DELETE -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/assets/$asset"
-        done
-        sleep 60
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "stable"
+
+      - name: Build and Test on Default Platform
+        run: |
+          go build -v ./...
+          go test -v ./...
+
+      - name: Delete Existing Release Assets
+        run: |
+          release_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/tags/output" | jq -r '.id')
+          echo "Deleting existing release assets..."
+          assets=$(curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/oneclickvirt/memorytest/releases/$release_id/assets" | jq -r '.[] | .id')
+          for asset in $assets; do
+            echo "Deleting asset with ID: $asset"
+            curl -X DELETE -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/assets/$asset"
+          done
+          sleep 60
 
   release-binary:
     name: Release Go Binary
-    runs-on: ubuntu-latest
     needs: build
     strategy:
       matrix:
@@ -47,7 +46,8 @@ jobs:
             cflags: "-O2 -static -fno-stack-protector -Wl,--gc-sections"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: 386
             cgo_enabled: "1"
@@ -55,7 +55,8 @@ jobs:
             cflags: "-m32 -static -O1 -march=i686 -mtune=generic -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-multilib"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: arm64
             cgo_enabled: "1"
@@ -63,7 +64,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-aarch64-linux-gnu"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: arm
             goarm: "7"
@@ -72,7 +74,8 @@ jobs:
             cflags: "-static -O1 -march=armv7-a -mfpu=vfpv3-d16 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-arm-linux-gnueabihf"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: riscv64
             cgo_enabled: "1"
@@ -80,7 +83,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-riscv64-linux-gnu"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: mips64
             cgo_enabled: "1"
@@ -88,7 +92,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mips64-linux-gnuabi64"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: mips64le
             cgo_enabled: "1"
@@ -96,7 +101,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mips64el-linux-gnuabi64"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: mips
             cgo_enabled: "1"
@@ -104,7 +110,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mips-linux-gnu"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: mipsle
             cgo_enabled: "1"
@@ -112,7 +119,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mipsel-linux-gnu"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: ppc64
             cgo_enabled: "1"
@@ -120,7 +128,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-powerpc64-linux-gnu"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: ppc64le
             cgo_enabled: "1"
@@ -128,7 +137,8 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-powerpc64le-linux-gnu"
-            
+            runner: ubuntu-latest
+
           # macOS CGO enabled builds
           - goos: darwin
             goarch: amd64
@@ -137,7 +147,7 @@ jobs:
             cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
             ldflags: "-s -w"
             runner: macos-latest
-            
+
           - goos: darwin
             goarch: arm64
             cgo_enabled: "1"
@@ -145,7 +155,7 @@ jobs:
             cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
             ldflags: "-s -w"
             runner: macos-latest
-            
+
           # Windows CGO enabled builds
           - goos: windows
             goarch: amd64
@@ -154,7 +164,8 @@ jobs:
             cflags: "-O2 -static -static-libgcc -static-libstdc++"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-x86-64"
-            
+            runner: ubuntu-latest
+
           - goos: windows
             goarch: 386
             cgo_enabled: "1"
@@ -162,177 +173,192 @@ jobs:
             cflags: "-O2 -static -static-libgcc -static-libstdc++"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-i686"
-            
+            runner: ubuntu-latest
+
           # 其他架构 - CGO disabled builds
           - goos: windows
             goarch: arm64
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: windows
             goarch: arm
             goarm: "7"
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: freebsd
             goarch: amd64
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: freebsd
             goarch: 386
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: freebsd
             goarch: arm64
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: freebsd
             goarch: arm
             goarm: "7"
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: openbsd
             goarch: amd64
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: openbsd
             goarch: 386
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: openbsd
             goarch: arm64
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: openbsd
             goarch: arm
             goarm: "7"
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           # Linux 其他架构 - CGO disabled
           - goos: linux
             goarch: arm
             goarm: "6"
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: arm
             goarm: "5"
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: mipsle
             gomips: softfloat
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
+            runner: ubuntu-latest
+
           - goos: linux
             goarch: mips
             gomips: softfloat
             cgo_enabled: "0"
             ldflags: "-s -w"
-            
-    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
+            runner: ubuntu-latest
+
+    runs-on: ${{ matrix.runner }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 'stable'
-        
-    - name: Setup build environment (Linux)
-      if: runner.os == 'Linux' && matrix.packages
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ${{ matrix.packages }}
-        
-    - name: Setup build environment (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        xcode-select --install || true
-        
-    - name: Build Binary
-      run: |
-        mkdir -p bin
-        cd cmd
-        
-        # 设置环境变量
-        export CGO_ENABLED=${{ matrix.cgo_enabled }}
-        export GOOS=${{ matrix.goos }}
-        export GOARCH=${{ matrix.goarch }}
-        
-        # 设置架构相关的环境变量
-        if [[ -n "${{ matrix.goarm }}" ]]; then
-          export GOARM=${{ matrix.goarm }}
-        fi
-        if [[ -n "${{ matrix.gomips }}" ]]; then
-          export GOMIPS=${{ matrix.gomips }}
-        fi
-        
-        # 设置编译器和标志（仅在CGO启用时）
-        if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
-          export CC="${{ matrix.cc }}"
-          export CGO_CFLAGS="${{ matrix.cflags }}"
-          if [[ "${{ matrix.goos }}" == "windows" ]]; then
-            export CGO_LDFLAGS="-static -static-libgcc -static-libstdc++"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "stable"
+
+      - name: Setup build environment (Linux)
+        if: runner.os == 'Linux' && matrix.packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.packages }}
+
+      - name: Setup build environment (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          xcode-select --install || true
+
+      - name: Build Binary
+        run: |
+          mkdir -p bin
+          cd cmd
+
+          # 设置环境变量
+          export CGO_ENABLED=${{ matrix.cgo_enabled }}
+          export GOOS=${{ matrix.goos }}
+          export GOARCH=${{ matrix.goarch }}
+
+          # 设置架构相关的环境变量
+          if [[ -n "${{ matrix.goarm }}" ]]; then
+            export GOARM=${{ matrix.goarm }}
           fi
-        fi
-        
-        # 构建二进制文件名
-        BINARY_NAME="memorytest-${{ matrix.goos }}-${{ matrix.goarch }}"
-        if [[ -n "${{ matrix.goarm }}" ]]; then
-          BINARY_NAME="${BINARY_NAME}v${{ matrix.goarm }}"
-        fi
-        if [[ -n "${{ matrix.gomips }}" ]]; then
-          BINARY_NAME="${BINARY_NAME}-${{ matrix.gomips }}"
-        fi
-        if [[ "${{ matrix.goos }}" == "windows" ]]; then
-          BINARY_NAME="${BINARY_NAME}.exe"
-        fi
-        
-        # 编译
-        echo "Building $BINARY_NAME with CGO_ENABLED=$CGO_ENABLED"
-        go build \
-          -o ../bin/$BINARY_NAME \
-          -v \
-          -ldflags="${{ matrix.ldflags }}" \
-          -trimpath \
-          .
-          
-        # 显示文件信息
-        ls -lah ../bin/$BINARY_NAME
-        file ../bin/$BINARY_NAME || true
-        
-        # 测试二进制文件（仅在本地架构上）
-        if [[ "${{ matrix.goos }}" == "linux" && "${{ matrix.goarch }}" == "amd64" && "${{ runner.os }}" == "Linux" ]]; then
-          echo "Testing binary..."
-          ../bin/$BINARY_NAME --help || true
-        elif [[ "${{ matrix.goos }}" == "darwin" && "${{ runner.os }}" == "macOS" ]]; then
-          echo "Testing binary..."
-          ../bin/$BINARY_NAME --help || true
-        fi
-        
-    - name: Upload New Assets
-      run: |
-        release_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/tags/output" | jq -r '.id')
-        echo "Uploading new assets to release..."
-        for file in ./bin/*; do
-          echo "Uploading $file to release..."
-          curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Content-Type: application/octet-stream" \
-            --data-binary @"$file" \
-            "https://uploads.github.com/repos/oneclickvirt/memorytest/releases/$release_id/assets?name=$(basename "$file")"
-          rm -rf $file
-        done
+          if [[ -n "${{ matrix.gomips }}" ]]; then
+            export GOMIPS=${{ matrix.gomips }}
+          fi
+
+          # 设置编译器和标志（仅在CGO启用时）
+          if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
+            export CC="${{ matrix.cc }}"
+            export CGO_CFLAGS="${{ matrix.cflags }}"
+            if [[ "${{ matrix.goos }}" == "windows" ]]; then
+              export CGO_LDFLAGS="-static -static-libgcc -static-libstdc++"
+            fi
+          fi
+
+          # 构建二进制文件名
+          BINARY_NAME="memorytest-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [[ -n "${{ matrix.goarm }}" ]]; then
+            BINARY_NAME="${BINARY_NAME}v${{ matrix.goarm }}"
+          fi
+          if [[ -n "${{ matrix.gomips }}" ]]; then
+            BINARY_NAME="${BINARY_NAME}-${{ matrix.gomips }}"
+          fi
+          if [[ "${{ matrix.goos }}" == "windows" ]]; then
+            BINARY_NAME="${BINARY_NAME}.exe"
+          fi
+
+          # 编译
+          echo "Building $BINARY_NAME with CGO_ENABLED=$CGO_ENABLED"
+          go build \
+            -o ../bin/$BINARY_NAME \
+            -v \
+            -ldflags="${{ matrix.ldflags }}" \
+            -trimpath \
+            .
+            
+          # 显示文件信息
+          ls -lah ../bin/$BINARY_NAME
+          file ../bin/$BINARY_NAME || true
+
+          # 测试二进制文件（仅在本地架构上）
+          if [[ "${{ matrix.goos }}" == "linux" && "${{ matrix.goarch }}" == "amd64" && "${{ runner.os }}" == "Linux" ]]; then
+            echo "Testing binary..."
+            ../bin/$BINARY_NAME --help || true
+          elif [[ "${{ matrix.goos }}" == "darwin" && "${{ runner.os }}" == "macOS" ]]; then
+            echo "Testing binary..."
+            ../bin/$BINARY_NAME --help || true
+          fi
+
+      - name: Upload New Assets
+        run: |
+          release_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/tags/output" | jq -r '.id')
+          echo "Uploading new assets to release..."
+          for file in ./bin/*; do
+            echo "Uploading $file to release..."
+            curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"$file" \
+              "https://uploads.github.com/repos/oneclickvirt/memorytest/releases/$release_id/assets?name=$(basename "$file")"
+            rm -rf $file
+          done
