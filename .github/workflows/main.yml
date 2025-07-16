@@ -136,7 +136,13 @@ jobs:
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
-
+            
+          - goos: linux
+            goarch: s390x
+            cgo_enabled: "0"
+            ldflags: "-extldflags=-static -s -w"
+            runner: ubuntu-latest
+            
           - goos: linux
             goarch: arm
             goarm: "7"
