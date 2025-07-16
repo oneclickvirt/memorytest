@@ -25,7 +25,6 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
     FILETIME ft;
     unsigned __int64 tmpres = 0;
     static int tzflag;
-
     if (NULL != tv)
     {
         GetSystemTimeAsFileTime(&ft);
@@ -40,7 +39,6 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
         tv->tv_sec = (long)(tmpres / 1000000UL);
         tv->tv_usec = (long)(tmpres % 1000000UL);
     }
-
     return 0;
 }
 #endif
@@ -50,13 +48,10 @@ long *make_array(unsigned long long asize)
     unsigned long long t;
     unsigned int long_size=sizeof(long);
     long *a;
-
     a=calloc(asize, long_size);
-
     if(NULL==a) {
         return NULL;
     }
-
     for(t=0; t<asize; t++) {
         a[t]=0xaa;
     }
@@ -70,7 +65,6 @@ double worker(unsigned long long asize, long *a, long *b, int type, unsigned lon
     double te;
     unsigned int long_size=sizeof(long);
     unsigned long long array_bytes=asize*long_size;
-
     if(type==TEST_MEMCPY) {
         gettimeofday(&starttime, NULL);
         memcpy(b, a, array_bytes);
@@ -93,9 +87,7 @@ double worker(unsigned long long asize, long *a, long *b, int type, unsigned lon
         }
         gettimeofday(&endtime, NULL);
     }
-
     te=((double)(endtime.tv_sec*1000000-starttime.tv_sec*1000000+endtime.tv_usec-starttime.tv_usec))/1000000;
-
     return te;
 }
 
@@ -108,22 +100,18 @@ int run_memory_test(unsigned long long mt, struct TestResult *results)
     int nr_loops=5;
     int testno, i;
     double te, te_sum;
-
     if(asize*long_size < block_size) {
         return -1;
     }
-
     a=make_array(asize);
     if(a==NULL) {
         return -1;
     }
-
     b=make_array(asize);
     if(b==NULL) {
         free(a);
         return -1;
     }
-
     for(testno=0; testno<MAX_TESTS; testno++) {
         te_sum=0;
         for (i=0; i<nr_loops; i++) {
@@ -133,7 +121,6 @@ int run_memory_test(unsigned long long mt, struct TestResult *results)
         results[testno].speed = mt/te_sum*nr_loops;
         results[testno].type = testno;
     }
-
     free(a);
     free(b);
     return 0;

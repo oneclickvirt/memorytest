@@ -3,12 +3,17 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
-struct timeval {
+#ifndef _TIMEVAL_DEFINED
+#define _TIMEVAL_DEFINED
+struct timeval
+{
     long tv_sec;
     long tv_usec;
 };
+#endif
 
-struct timezone {
+struct timezone
+{
     int tz_minuteswest;
     int tz_dsttime;
 };
@@ -16,7 +21,8 @@ struct timezone {
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif
 
-struct TestResult {
+struct TestResult
+{
     int type;
     double speed;
 };
