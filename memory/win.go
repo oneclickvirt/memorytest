@@ -106,13 +106,13 @@ func WindowsDDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", err.Error()))
 			}
-			return ""
+			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	// Read test - 在Windows上从临时文件读取到NUL
 	for _, size := range sizes {
@@ -142,13 +142,13 @@ func WindowsDDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", err.Error()))
 			}
-			return ""
+			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
-		return ""
+		return simpleMemoryTest(language)
 	}
 	return result
 }
