@@ -68,16 +68,6 @@ jobs:
             runner: ubuntu-latest
 
           - goos: linux
-            goarch: arm
-            goarm: "7"
-            cgo_enabled: "0"
-            cc: arm-linux-gnueabihf-gcc
-            cflags: "-static -O1 -march=armv7-a -mfpu=vfpv3-d16 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
-            packages: "build-essential gcc-arm-linux-gnueabihf"
-            runner: ubuntu-latest
-
-          - goos: linux
             goarch: riscv64
             cgo_enabled: "1"
             cc: riscv64-linux-gnu-gcc
@@ -102,33 +92,6 @@ jobs:
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
             packages: "build-essential gcc-mips64el-linux-gnuabi64"
-            runner: ubuntu-latest
-
-          - goos: linux
-            goarch: mips
-            cgo_enabled: "0"
-            cc: mips-linux-gnu-gcc
-            cflags: "-static -O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
-            packages: "build-essential gcc-mips-linux-gnu"
-            runner: ubuntu-latest
-
-          - goos: linux
-            goarch: mipsle
-            cgo_enabled: "0"
-            cc: mipsel-linux-gnu-gcc
-            cflags: "-static -O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
-            packages: "build-essential gcc-mipsel-linux-gnu"
-            runner: ubuntu-latest
-
-          - goos: linux
-            goarch: ppc64
-            cgo_enabled: "0"
-            cc: powerpc64-linux-gnu-gcc
-            cflags: "-static -O1 -fno-stack-protector"
-            ldflags: "-extldflags=-static -s -w"
-            packages: "build-essential gcc-powerpc64-linux-gnu"
             runner: ubuntu-latest
 
           - goos: linux
@@ -174,63 +137,7 @@ jobs:
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
 
-          - goos: windows
-            goarch: arm64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: windows
-            goarch: arm
-            goarm: "7"
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: freebsd
-            goarch: amd64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: freebsd
-            goarch: 386
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: freebsd
-            goarch: arm64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: freebsd
-            goarch: arm
-            goarm: "7"
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: openbsd
-            goarch: amd64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: openbsd
-            goarch: 386
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: openbsd
-            goarch: arm64
-            cgo_enabled: "0"
-            ldflags: "-s -w"
-            runner: ubuntu-latest
-
-          - goos: openbsd
+          - goos: linux
             goarch: arm
             goarm: "7"
             cgo_enabled: "0"
@@ -252,6 +159,18 @@ jobs:
             runner: ubuntu-latest
 
           - goos: linux
+            goarch: mips
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: linux
+            goarch: mipsle
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: linux
             goarch: mipsle
             gomips: softfloat
             cgo_enabled: "0"
@@ -261,6 +180,75 @@ jobs:
           - goos: linux
             goarch: mips
             gomips: softfloat
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: linux
+            goarch: ppc64
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: windows
+            goarch: arm64
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: windows
+            goarch: arm
+            goarm: "7"
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: freebsd
+            goarch: amd64
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: freebsd
+            goarch: 386
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: freebsd
+            goarch: arm64
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: freebsd
+            goarch: arm
+            goarm: "7"
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: openbsd
+            goarch: amd64
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: openbsd
+            goarch: 386
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: openbsd
+            goarch: arm64
+            cgo_enabled: "0"
+            ldflags: "-s -w"
+            runner: ubuntu-latest
+
+          - goos: openbsd
+            goarch: arm
+            goarm: "7"
             cgo_enabled: "0"
             ldflags: "-s -w"
             runner: ubuntu-latest
