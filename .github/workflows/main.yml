@@ -70,7 +70,7 @@ jobs:
           - goos: linux
             goarch: arm
             goarm: "7"
-            cgo_enabled: "1"
+            cgo_enabled: "0"
             cc: arm-linux-gnueabihf-gcc
             cflags: "-static -O1 -march=armv7-a -mfpu=vfpv3-d16 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
@@ -106,7 +106,7 @@ jobs:
 
           - goos: linux
             goarch: mips
-            cgo_enabled: "1"
+            cgo_enabled: "0"
             cc: mips-linux-gnu-gcc
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
@@ -115,7 +115,7 @@ jobs:
 
           - goos: linux
             goarch: mipsle
-            cgo_enabled: "1"
+            cgo_enabled: "0"
             cc: mipsel-linux-gnu-gcc
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
@@ -124,7 +124,7 @@ jobs:
 
           - goos: linux
             goarch: ppc64
-            cgo_enabled: "1"
+            cgo_enabled: "0"
             cc: powerpc64-linux-gnu-gcc
             cflags: "-static -O1 -fno-stack-protector"
             ldflags: "-extldflags=-static -s -w"
