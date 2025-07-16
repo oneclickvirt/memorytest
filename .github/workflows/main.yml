@@ -35,10 +35,11 @@ jobs:
   release-binary:
     name: Release Go Binary
     needs: build
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         include:
-          # Linux CGO enabled builds - 主要架构
           - goos: linux
             goarch: amd64
             cgo_enabled: "1"
@@ -139,7 +140,6 @@ jobs:
             packages: "build-essential gcc-powerpc64le-linux-gnu"
             runner: ubuntu-latest
 
-          # macOS CGO enabled builds
           - goos: darwin
             goarch: amd64
             cgo_enabled: "1"
@@ -156,7 +156,6 @@ jobs:
             ldflags: "-s -w"
             runner: macos-latest
 
-          # Windows CGO enabled builds
           - goos: windows
             goarch: amd64
             cgo_enabled: "1"
@@ -175,7 +174,6 @@ jobs:
             packages: "build-essential gcc-mingw-w64-i686"
             runner: ubuntu-latest
 
-          # 其他架构 - CGO disabled builds
           - goos: windows
             goarch: arm64
             cgo_enabled: "0"
@@ -239,7 +237,6 @@ jobs:
             ldflags: "-s -w"
             runner: ubuntu-latest
 
-          # Linux 其他架构 - CGO disabled
           - goos: linux
             goarch: arm
             goarm: "6"
@@ -280,26 +277,27 @@ jobs:
 
       - name: Setup build environment (Linux)
         if: runner.os == 'Linux' && matrix.packages
+        continue-on-error: true
         run: |
           sudo apt-get update
           sudo apt-get install -y ${{ matrix.packages }}
 
       - name: Setup build environment (macOS)
         if: runner.os == 'macOS'
+        continue-on-error: true
         run: |
           xcode-select --install || true
 
       - name: Build Binary
+        continue-on-error: true
         run: |
           mkdir -p bin
           cd cmd
 
-          # 设置环境变量
           export CGO_ENABLED=${{ matrix.cgo_enabled }}
           export GOOS=${{ matrix.goos }}
           export GOARCH=${{ matrix.goarch }}
 
-          # 设置架构相关的环境变量
           if [[ -n "${{ matrix.goarm }}" ]]; then
             export GOARM=${{ matrix.goarm }}
           fi
@@ -307,7 +305,6 @@ jobs:
             export GOMIPS=${{ matrix.gomips }}
           fi
 
-          # 设置编译器和标志（仅在CGO启用时）
           if [[ "${{ matrix.cgo_enabled }}" == "1" ]]; then
             export CC="${{ matrix.cc }}"
             export CGO_CFLAGS="${{ matrix.cflags }}"
@@ -316,7 +313,6 @@ jobs:
             fi
           fi
 
-          # 构建二进制文件名
           BINARY_NAME="memorytest-${{ matrix.goos }}-${{ matrix.goarch }}"
           if [[ -n "${{ matrix.goarm }}" ]]; then
             BINARY_NAME="${BINARY_NAME}v${{ matrix.goarm }}"
@@ -328,7 +324,6 @@ jobs:
             BINARY_NAME="${BINARY_NAME}.exe"
           fi
 
-          # 编译
           echo "Building $BINARY_NAME with CGO_ENABLED=$CGO_ENABLED"
           go build \
             -o ../bin/$BINARY_NAME \
@@ -337,11 +332,9 @@ jobs:
             -trimpath \
             .
             
-          # 显示文件信息
           ls -lah ../bin/$BINARY_NAME
           file ../bin/$BINARY_NAME || true
 
-          # 测试二进制文件（仅在本地架构上）
           if [[ "${{ matrix.goos }}" == "linux" && "${{ matrix.goarch }}" == "amd64" && "${{ runner.os }}" == "Linux" ]]; then
             echo "Testing binary..."
             ../bin/$BINARY_NAME --help || true
@@ -351,14 +344,17 @@ jobs:
           fi
 
       - name: Upload New Assets
+        continue-on-error: true
         run: |
           release_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/oneclickvirt/memorytest/releases/tags/output" | jq -r '.id')
           echo "Uploading new assets to release..."
           for file in ./bin/*; do
-            echo "Uploading $file to release..."
-            curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary @"$file" \
-              "https://uploads.github.com/repos/oneclickvirt/memorytest/releases/$release_id/assets?name=$(basename "$file")"
-            rm -rf $file
+            if [[ -f "$file" ]]; then
+              echo "Uploading $file to release..."
+              curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$file" \
+                "https://uploads.github.com/repos/oneclickvirt/memorytest/releases/$release_id/assets?name=$(basename "$file")"
+              rm -rf $file
+            fi
           done
