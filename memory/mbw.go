@@ -1,4 +1,4 @@
-//go:build (linux && amd64) || (linux && 386) || (linux && arm64) || (linux && riscv64) || (linux && mips64) || (linux && mips64le) || (linux && ppc64le) || (darwin && amd64) || (darwin && arm64) || (windows && amd64) || (windows && 386)
+//go:build (linux && amd64) || (linux && 386) || (linux && arm64) || (linux && riscv64) || (linux && mips64) || (linux && mips64le) || (linux && ppc64le) || (windows && amd64) || (windows && 386)
 
 package memory
 
