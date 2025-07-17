@@ -105,17 +105,17 @@ jobs:
 
           - goos: darwin
             goarch: amd64
-            cgo_enabled: "1"
-            cc: clang
-            cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
+            cgo_enabled: "0"
+            # cc: clang
+            # cflags: "-O2 -arch x86_64 -mmacosx-version-min=10.12"
             ldflags: "-s -w"
             runner: macos-latest
 
           - goos: darwin
             goarch: arm64
-            cgo_enabled: "1"
-            cc: clang
-            cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
+            cgo_enabled: "0"
+            # cc: clang
+            # cflags: "-O2 -arch arm64 -mmacosx-version-min=11.0"
             ldflags: "-s -w"
             runner: macos-latest
 
