@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"runtime"
 
 	"github.com/oneclickvirt/dd"
 	. "github.com/oneclickvirt/defaultset"
