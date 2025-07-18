@@ -145,9 +145,12 @@ jobs:
             
           - goos: linux
             goarch: arm
-            goarm: "7"
-            cgo_enabled: "0"
-            ldflags: "-s -w"
+            goarm: 7
+            cgo_enabled: "1"
+            cc: arm-linux-gnueabihf-gcc
+            cflags: "-O1 -fno-stack-protector"
+            ldflags: "-extldflags=-static -s -w"
+            packages: "build-essential gcc-arm-linux-gnueabihf"
             runner: ubuntu-latest
 
           - goos: linux

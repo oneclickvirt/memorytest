@@ -23,6 +23,9 @@ func WinsatTest(language string) string {
 		} else {
 			fmt.Println("当前检测到系统无admin权限")
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	var result string
@@ -31,6 +34,9 @@ func WinsatTest(language string) string {
 	if err != nil {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running winsat command: %v %s\n", strings.TrimSpace(string(output)), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	} else {
@@ -62,6 +68,9 @@ func WindowsDDTest(language string) string {
 			fmt.Println("Current system detected no admin permission")
 		} else {
 			fmt.Println("当前检测到系统无admin权限")
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -106,11 +115,17 @@ func WindowsDDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", err.Error()))
 			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
 			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -142,11 +157,17 @@ func WindowsDDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", err.Error()))
 			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
 			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
