@@ -39,11 +39,12 @@ func simpleMemoryTest(language string) string {
 		if EnableLoger {
 			Logger.Error("Failed to get mbw command: " + err.Error())
 		}
-		if language == "en" {
-			return "Memory test failed: mbw command not available\n"
-		} else {
-			return "内存测试失败: mbw 命令不可用\n"
-		}
+		return simpleMemoryTestOnlyGoalng(language)
+		// if language == "en" {
+		// 	return "Memory test failed: mbw command not available\n"
+		// } else {
+		// 	return "内存测试失败: mbw 命令不可用\n"
+		// }
 	}
 	testSizes := []string{"1024", "512", "256", "128", "64", "32"}
 	var output []byte
