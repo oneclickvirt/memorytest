@@ -57,6 +57,9 @@ func SysBenchTest(language string) string {
 		} else {
 			fmt.Println("当前检测到系统无root权限")
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	var result string
@@ -112,6 +115,9 @@ func SysBenchTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(readResult), err.Error()))
 			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
 			return simpleMemoryTest(language)
 		} else {
 			testReadOps, testReadSpeed, mibReadFlag = processResult(readResult)
@@ -121,6 +127,9 @@ func SysBenchTest(language string) string {
 		if err != nil {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(writeResult), err.Error()))
+			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
 			}
 			return simpleMemoryTest(language)
 		} else {
@@ -163,6 +172,9 @@ func SysBenchTest(language string) string {
 		if EnableLoger {
 			Logger.Info("cannot match sysbench command: " + err.Error())
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	return result
@@ -170,7 +182,6 @@ func SysBenchTest(language string) string {
 
 // execDDTest 执行dd命令测试内存IO，并回传结果和测试错误
 func execDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (string, error) {
-	_ = isWrite
 	var tempText string
 	var cmd2 *exec.Cmd
 	ddCmd, ddPath, err := dd.GetDD()
@@ -222,7 +233,6 @@ func formatIOPS(iops, usageTime float64) string {
 
 // parseOutput 解析结果
 func parseOutput(tempText, language string, records float64) (string, error) {
-	_ = language
 	var result string
 	lines := strings.Split(tempText, "\n")
 	for _, line := range lines {
@@ -366,6 +376,9 @@ func DDTest(language string) string {
 		} else {
 			fmt.Println("当前检测到系统无root权限")
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	// 获取内存文件系统目录
@@ -373,6 +386,9 @@ func DDTest(language string) string {
 	if err != nil {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Failed to get memory directory: %v", err))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -382,6 +398,9 @@ func DDTest(language string) string {
 			Logger.Info(fmt.Sprintf("Directory %s is not a real memory filesystem", memoryDir))
 		}
 		cleanup() // 清理已创建的资源
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	defer cleanup()
@@ -414,6 +433,9 @@ func DDTest(language string) string {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
@@ -429,11 +451,17 @@ func DDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", parseErr.Error()))
 			}
-			return simpleMemoryTest(language)
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
+		return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -459,6 +487,9 @@ func DDTest(language string) string {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	if err == nil || strings.Contains(tempText, "No space left on device") {
@@ -474,11 +505,17 @@ func DDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", parseErr.Error()))
 			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
 			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"runtime"
 
 	"github.com/oneclickvirt/dd"
 	. "github.com/oneclickvirt/defaultset"
@@ -23,6 +24,9 @@ func WinsatTest(language string) string {
 		} else {
 			fmt.Println("当前检测到系统无admin权限")
 		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
+		}
 		return simpleMemoryTest(language)
 	}
 	var result string
@@ -31,6 +35,9 @@ func WinsatTest(language string) string {
 	if err != nil {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running winsat command: %v %s\n", strings.TrimSpace(string(output)), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	} else {
@@ -62,6 +69,9 @@ func WindowsDDTest(language string) string {
 			fmt.Println("Current system detected no admin permission")
 		} else {
 			fmt.Println("当前检测到系统无admin权限")
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -106,11 +116,17 @@ func WindowsDDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing write test: %v\n", err.Error()))
 			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
 			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running write test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -142,11 +158,17 @@ func WindowsDDTest(language string) string {
 			if EnableLoger {
 				Logger.Info(fmt.Sprintf("Error parsing read test: %v\n", err.Error()))
 			}
+			if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+				return simpleMemoryTestCustom(language)
+			}
 			return simpleMemoryTest(language)
 		}
 	} else {
 		if EnableLoger {
 			Logger.Info(fmt.Sprintf("Error running read test: %v %s\n", strings.TrimSpace(tempText), err.Error()))
+		}
+		if runtime.GOOS == "linux" && runtime.GOARCH == "arm" {
+			return simpleMemoryTestCustom(language)
 		}
 		return simpleMemoryTest(language)
 	}
@@ -155,7 +177,6 @@ func WindowsDDTest(language string) string {
 
 // execWindowsDDTest 在Windows环境执行dd命令测试内存IO
 func execWindowsDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (string, error) {
-	_ = isWrite
 	var tempText string
 	var cmd2 *exec.Cmd
 	// 获取dd命令路径，Windows环境可能需要额外检查
@@ -192,7 +213,6 @@ func execWindowsDDTest(ifKey, ofKey, bs, blockCount string, isWrite bool) (strin
 
 // parseWindowsOutput 解析Windows环境下dd命令输出结果
 func parseWindowsOutput(tempText, language string, records float64) (string, error) {
-	_ = language
 	var result string
 	// Windows环境下dd命令输出格式可能与Linux不同，需要适当调整
 	lines := strings.Split(tempText, "\n")
