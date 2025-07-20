@@ -2,7 +2,7 @@
 
 [![Hits](https://hits.spiritlhl.net/memorytest.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false)](https://hits.spiritlhl.net)
 
-[![Build and Release](https://github.com/oneclickvirt/memoryTest/actions/workflows/main.yml/badge.svg)](https://github.com/oneclickvirt/memoryTest/actions/workflows/main.yml)
+[![Build and Release](https://github.com/oneclickvirt/memorytest/actions/workflows/build.yaml/badge.svg)](https://github.com/oneclickvirt/memorytest/actions/workflows/build.yaml)
 
 内存测试模块 (Memory Test Module) 
 
