@@ -31,7 +31,6 @@ func main() {
 		memorytestFlag.PrintDefaults()
 		return
 	}
-
 	if showVersion {
 		fmt.Println(memory.MemoryTestVersion)
 		return
@@ -42,7 +41,6 @@ func main() {
 	} else {
 		language = strings.ToLower(language)
 	}
-
 	if testMethod == "" || strings.ToLower(testMethod) == "sysbench" {
 		testMethod = "sysbench"
 	} else if strings.ToLower(testMethod) == "dd" {
@@ -51,9 +49,7 @@ func main() {
 	if runtime.GOOS == "windows" {
 		switch testMethod {
 		case "dd":
-			// 在Windows环境下使用DD测试
 			res = memory.WindowsDDTest(language)
-			// 如果DD测试失败或结果为空，回退到winsat
 			if res == "" || strings.TrimSpace(res) == "" {
 				if language == "en" {
 					res = "DD test failed, switching to Winsat for testing.\n"
@@ -63,7 +59,6 @@ func main() {
 				res += memory.WinsatTest(language)
 			}
 		case "sysbench":
-			// sysbench在Windows下不支持，提示并使用winsat
 			if language == "en" {
 				res = "Sysbench is not supported on Windows, using Winsat for testing.\n"
 			} else {
@@ -71,7 +66,6 @@ func main() {
 			}
 			res += memory.WinsatTest(language)
 		default:
-			// 默认情况或winsat方法
 			if testMethod != "winsat" && testMethod != "" {
 				if language == "en" {
 					res = "Detected host is Windows, using Winsat for testing.\n"
