@@ -71,7 +71,7 @@ rm -rf /usr/bin/memorytest
 ## 在Golang中使用
 
 ```
-go get github.com/oneclickvirt/memorytest@v0.0.9-20250808065154
+go get github.com/oneclickvirt/memorytest@v0.0.9-20250924133446
 ```
 
 ## 测试图
