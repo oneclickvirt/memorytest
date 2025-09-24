@@ -57,6 +57,11 @@ func SysBenchTest(language string) string {
 		} else {
 			fmt.Println("当前检测到系统无root权限")
 		}
+		// Try STREAM first when no root permission, fallback to mbw if not available
+		streamResult := StreamTest(language)
+		if streamResult != "" && strings.TrimSpace(streamResult) != "" {
+			return streamResult
+		}
 		return simpleMemoryTest(language)
 	}
 	var result string
@@ -365,6 +370,11 @@ func DDTest(language string) string {
 			fmt.Println("Current system detected no root permission")
 		} else {
 			fmt.Println("当前检测到系统无root权限")
+		}
+		// Try STREAM first when no root permission, fallback to mbw if not available
+		streamResult := StreamTest(language)
+		if streamResult != "" && strings.TrimSpace(streamResult) != "" {
+			return streamResult
 		}
 		return simpleMemoryTest(language)
 	}

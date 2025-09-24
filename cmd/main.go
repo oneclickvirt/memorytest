@@ -23,7 +23,7 @@ func main() {
 	memorytestFlag.BoolVar(&help, "h", false, "Show help information")
 	memorytestFlag.BoolVar(&showVersion, "v", false, "show version")
 	memorytestFlag.StringVar(&language, "l", "", "Language parameter (en or zh)")
-	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (stream or dd or sysbench or winsat)")
+	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (stream, dd, sysbench, winsat, or auto)")
 	memorytestFlag.BoolVar(&memory.EnableLoger, "log", false, "Enable logging")
 	memorytestFlag.Parse(os.Args[1:])
 	if help {
