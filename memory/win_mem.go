@@ -23,6 +23,11 @@ func WinsatTest(language string) string {
 		} else {
 			fmt.Println("当前检测到系统无admin权限")
 		}
+		// Try STREAM first when no admin permission, fallback to mbw if not available
+		streamResult := StreamTest(language)
+		if streamResult != "" && strings.TrimSpace(streamResult) != "" {
+			return streamResult
+		}
 		return simpleMemoryTest(language)
 	}
 	var result string
@@ -62,6 +67,11 @@ func WindowsDDTest(language string) string {
 			fmt.Println("Current system detected no admin permission")
 		} else {
 			fmt.Println("当前检测到系统无admin权限")
+		}
+		// Try STREAM first when no admin permission, fallback to mbw if not available
+		streamResult := StreamTest(language)
+		if streamResult != "" && strings.TrimSpace(streamResult) != "" {
+			return streamResult
 		}
 		return simpleMemoryTest(language)
 	}
