@@ -23,7 +23,7 @@ func main() {
 	memorytestFlag.BoolVar(&help, "h", false, "Show help information")
 	memorytestFlag.BoolVar(&showVersion, "v", false, "show version")
 	memorytestFlag.StringVar(&language, "l", "", "Language parameter (en or zh)")
-	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (sysbench or dd or winsat)")
+	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (stream or dd or sysbench or winsat)")
 	memorytestFlag.BoolVar(&memory.EnableLoger, "log", false, "Enable logging")
 	memorytestFlag.Parse(os.Args[1:])
 	if help {
@@ -41,13 +41,21 @@ func main() {
 	} else {
 		language = strings.ToLower(language)
 	}
-	if testMethod == "" || strings.ToLower(testMethod) == "sysbench" {
-		testMethod = "sysbench"
-	} else if strings.ToLower(testMethod) == "dd" {
-		testMethod = "dd"
+	// Parse and normalize test method
+	testMethod = strings.ToLower(testMethod)
+	if testMethod == "" {
+		// Use automatic priority: stream > dd > sysbench (with mbw fallback)
+		testMethod = "auto"
 	}
 	if runtime.GOOS == "windows" {
 		switch testMethod {
+		case "stream":
+			if language == "en" {
+				res = "STREAM is not supported on Windows, using Winsat for testing.\n"
+			} else {
+				res = "Windows下不支持STREAM，使用Winsat进行测试。\n"
+			}
+			res += memory.WinsatTest(language)
 		case "dd":
 			res = memory.WindowsDDTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
@@ -66,7 +74,8 @@ func main() {
 			}
 			res += memory.WinsatTest(language)
 		default:
-			if testMethod != "winsat" && testMethod != "" {
+			// For auto or winsat or any other method
+			if testMethod != "winsat" && testMethod != "auto" {
 				if language == "en" {
 					res = "Detected host is Windows, using Winsat for testing.\n"
 				} else {
@@ -77,14 +86,39 @@ func main() {
 		}
 	} else {
 		switch testMethod {
-		case "sysbench":
-			res = memory.SysBenchTest(language)
-			if res == "" {
-				res = "sysbench test failed, switch to use dd test.\n"
+		case "stream":
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "STREAM test failed, switching to DD for testing.\n"
+				} else {
+					res = "STREAM测试失败，切换使用DD进行测试。\n"
+				}
 				res += memory.DDTest(language)
 			}
 		case "dd":
 			res = memory.DDTest(language)
+		case "sysbench":
+			res = memory.SysBenchTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "Sysbench test failed, switching to DD for testing.\n"
+				} else {
+					res = "Sysbench测试失败，切换使用DD进行测试。\n"
+				}
+				res += memory.DDTest(language)
+			}
+		case "auto":
+			// Priority: stream > dd > sysbench (with mbw fallback built into each)
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				// Stream failed or not available, try DD
+				res = memory.DDTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					// DD failed, try sysbench as final fallback
+					res = memory.SysBenchTest(language)
+				}
+			}
 		default:
 			res = "Unsupported test method"
 		}

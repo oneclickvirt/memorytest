@@ -8,13 +8,20 @@
 
 # 功能(Features)
 
-- [x] 支持使用```sysbench```测试内存的顺序读写IO
-- [x] 支持使用```dd```测试内存的读写IO
+- [x] 支持使用```stream```进行高性能内存带宽测试 (最高优先级)
+- [x] 支持使用```dd```测试内存的读写IO (可选方式)
+- [x] 支持使用```sysbench```测试内存的顺序读写IO (兜底实现)
 - [x] 支持使用```winsat```测试内存的读写性能
 - [x] 支持Go自身静态依赖注入[dd](https://github.com/oneclickvirt/dd)，使用时无额外环境依赖需求
 - [x] 以```-l```指定输出的语言类型，可指定```zh```或```en```，默认不指定时使用中文输出
-- [x] 以```-m```指定测试的方法，可指定```sysbench```或```dd```或```winsat```，默认不指定时使用```sysbench```进行测试
+- [x] 以```-m```指定测试的方法，可指定```stream```或```dd```或```sysbench```或```winsat```，默认不指定时按优先级自动选择测试方法
 - [x] 全平台编译支持，支持无权限测试时使用C重构或自编译的mbw程序模拟大内存COPY块测试内存性能
+
+## 测试方法优先级
+当不指定`-m`参数时，程序按以下优先级自动选择测试方法：
+1. **STREAM** - 如果检测到stream二进制文件，优先使用
+2. **DD** - 如果STREAM不可用，使用DD测试
+3. **Sysbench** - 作为最终的兜底实现
 
 注意：默认不自动安装```sysbench```组件，如需使用请自行安装后再使用本项目，如```apt update && apt install sysbench -y```
 
@@ -48,7 +55,7 @@ Usage: memorytest [options]
   -log
         Enable logging
   -m string
-        Specific Test Method (sysbench or dd)
+        Specific Test Method (stream or dd or sysbench or winsat)
   -v    show version
 ```
 

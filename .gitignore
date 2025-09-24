@@ -1,0 +1,15 @@
+# Build artifacts
+memorytest
+/cmd/cmd
+*.exe
+
+# Temporary files
+/tmp/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
