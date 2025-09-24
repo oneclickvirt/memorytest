@@ -6,6 +6,8 @@ github.com/oneclickvirt/defaultset v0.0.2-20240624082446 h1:5Pg3mK/u/vQvSz7anu0n
 github.com/oneclickvirt/defaultset v0.0.2-20240624082446/go.mod h1:e9Jt4tf2sbemCtc84/XgKcHy9EZ2jkc5x2sW1NiJS+E=
 github.com/oneclickvirt/mbw v0.0.1-20250808061222 h1:WGXOe6QvHiDRhPVMI0VcctjzW08kGvJf50yq5YeZCtw=
 github.com/oneclickvirt/mbw v0.0.1-20250808061222/go.mod h1:0Vq6NRpyLmGUdfHfL3uDcFsuZhi7KlG+OCs5ky2757Y=
+github.com/oneclickvirt/stream v0.0.1-20250924124003 h1:zjMAHbZoJZLBrimPrRC+h9OjV62Bz542apfOo8QF2IQ=
+github.com/oneclickvirt/stream v0.0.1-20250924124003/go.mod h1:oWaizaHTC2VQciBC9RfaLbAOf8qeR6n20/gY7QxriDE=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
