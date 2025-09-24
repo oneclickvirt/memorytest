@@ -19,57 +19,12 @@ func StreamTest(language string) string {
 		Logger.Info("Running STREAM memory test")
 	}
 
-	var streamCmd string
-	var tempFile string
-	var err error
-
-	// First try to get stream binary from the embedded library
-	streamCmd, tempFile, err = stream.GetStream()
+	streamCmd, tempFile, err := stream.GetStream()
 	if err != nil {
 		if EnableLoger {
-			Logger.Warn(fmt.Sprintf("Failed to get stream from library: %v, trying system binaries", err))
+			Logger.Error(fmt.Sprintf("Failed to get stream binary: %v", err))
 		}
-		
-		// Fallback to original logic - try different stream binary names based on architecture and OS
-		var streamBinaries []string
-		if runtime.GOOS == "windows" {
-			streamBinaries = []string{
-				"./stream-windows-amd64.exe",
-				"./stream.exe",
-				"stream-windows-amd64.exe",
-				"stream.exe",
-				"./stream-windows-amd64",
-				"./stream",
-				"stream-windows-amd64",
-				"stream",
-			}
-		} else {
-			streamBinaries = []string{
-				"./stream-linux-amd64",
-				"./stream",
-				"stream-linux-amd64",
-				"stream",
-			}
-		}
-
-		for _, binary := range streamBinaries {
-			if _, err := os.Stat(binary); err == nil {
-				streamCmd = binary
-				break
-			}
-			// Also check if it's available in PATH
-			if _, err := exec.LookPath(binary); err == nil {
-				streamCmd = binary
-				break
-			}
-		}
-
-		if streamCmd == "" {
-			if EnableLoger {
-				Logger.Warn("STREAM binary not found, falling back to alternative test")
-			}
-			return "" // Return empty to indicate fallback needed
-		}
+		return "" // 只允许通过 GetStream 获取，失败直接返回
 	}
 
 	// Clean up temporary file if it was created

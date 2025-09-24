@@ -8,11 +8,11 @@ require (
 	github.com/oneclickvirt/dd v0.0.2-20250808062818
 	github.com/oneclickvirt/defaultset v0.0.2-20240624082446
 	github.com/oneclickvirt/mbw v0.0.1-20250808061222
+	github.com/oneclickvirt/stream v0.0.2-20250924150325
 	golang.org/x/sys v0.33.0
 )
 
 require (
-	github.com/oneclickvirt/stream v0.0.1-20250924124003 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 )
