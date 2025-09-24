@@ -7,6 +7,7 @@ import (
 
 func TestM(t *testing.T) {
 	// res := SysBenchTest("zh")
-	res := DDTest("zh")
+	// res := DDTest("zh")
+	res := StreamTest("zh")
 	fmt.Println(res)
 }
