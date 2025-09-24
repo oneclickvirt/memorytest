@@ -2,9 +2,7 @@ package memory
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 
 	. "github.com/oneclickvirt/defaultset"
