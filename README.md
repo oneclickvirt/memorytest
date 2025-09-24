@@ -70,9 +70,9 @@ go get github.com/oneclickvirt/memorytest@v0.0.10-20250924154648
 
 ## 测试图
 
-sysbench测试
+stream测试
 
-![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/741689a2-7887-4cec-9df5-c8e309b2dd84)
+<img width="702" height="159" alt="图片" src="https://github.com/user-attachments/assets/33e9d458-b501-4022-be8a-6f0615927552" />
 
 dd测试
 
@@ -86,4 +86,6 @@ mbw测试
 
 ![f4cc8695e41070f9c393071c49315464](https://github.com/user-attachments/assets/10538fb0-3d4e-4118-b248-8ccfd6a09e24)
 
+sysbench测试
 
+![图片](https://github.com/oneclickvirt/memoryTest/assets/103393591/741689a2-7887-4cec-9df5-c8e309b2dd84)
