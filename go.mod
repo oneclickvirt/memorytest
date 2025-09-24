@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/oneclickvirt/stream v0.0.1-20250924124003 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 )
