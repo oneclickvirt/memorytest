@@ -60,11 +60,19 @@ func main() {
 			res = memory.WindowsDDTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
 				if language == "en" {
-					res = "DD test failed, switching to Winsat for testing.\n"
+					res = "DD test failed, switching to STREAM for testing.\n"
 				} else {
-					res = "DD测试失败，切换使用Winsat进行测试。\n"
+					res = "DD测试失败，切换使用STREAM进行测试。\n"
 				}
-				res += memory.WinsatTest(language)
+				res += memory.StreamTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res = "STREAM test failed, switching to Winsat for testing.\n"
+					} else {
+						res = "STREAM测试失败，切换使用Winsat进行测试。\n"
+					}
+					res += memory.WinsatTest(language)
+				}
 			}
 		case "sysbench":
 			if language == "en" {
@@ -90,33 +98,97 @@ func main() {
 			res = memory.StreamTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
 				if language == "en" {
-					res = "STREAM test failed, switching to DD for testing.\n"
+					res = "STREAM test failed, switching to Sysbench for testing.\n"
 				} else {
-					res = "STREAM测试失败，切换使用DD进行测试。\n"
+					res = "STREAM测试失败，切换使用Sysbench进行测试。\n"
 				}
-				res += memory.DDTest(language)
+				res += memory.SysBenchTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res = "Sysbench test failed, switching to DD for testing.\n"
+					} else {
+						res = "Sysbench测试失败，切换使用DD进行测试。\n"
+					}
+					res += memory.DDTest(language)
+				}
 			}
 		case "dd":
 			res = memory.DDTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "DD test failed, switching to STREAM for testing.\n"
+				} else {
+					res = "DD测试失败，切换使用STREAM进行测试。\n"
+				}
+				res += memory.StreamTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res = "STREAM test failed, switching to Sysbench for testing.\n"
+					} else {
+						res = "STREAM测试失败，切换使用Sysbench进行测试。\n"
+					}
+					res += memory.SysBenchTest(language)
+				}
+			}
 		case "sysbench":
 			res = memory.SysBenchTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
 				if language == "en" {
-					res = "Sysbench test failed, switching to DD for testing.\n"
+					res = "Sysbench test failed, switching to STREAM for testing.\n"
 				} else {
-					res = "Sysbench测试失败，切换使用DD进行测试。\n"
+					res = "Sysbench测试失败，切换使用STREAM进行测试。\n"
 				}
-				res += memory.DDTest(language)
+				res += memory.StreamTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res = "STREAM test failed, retrying Sysbench for testing.\n"
+					} else {
+						res = "STREAM测试失败，重试使用Sysbench进行测试。\n"
+					}
+					res += memory.SysBenchTest(language)
+					if res == "" || strings.TrimSpace(res) == "" {
+						if language == "en" {
+							res = "Sysbench retry failed, switching to DD for testing.\n"
+						} else {
+							res = "Sysbench重试失败，切换使用DD进行测试。\n"
+						}
+						res += memory.DDTest(language)
+					}
+				}
 			}
 		case "auto":
-			// Priority: stream > dd > sysbench (with mbw fallback built into each)
+			// Priority: stream > sysbench > dd (with mbw fallback built into each)
 			res = memory.StreamTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
-				// Stream failed or not available, try DD
-				res = memory.DDTest(language)
+				// Stream failed or not available, try Sysbench
+				res = memory.SysBenchTest(language)
 				if res == "" || strings.TrimSpace(res) == "" {
-					// DD failed, try sysbench as final fallback
-					res = memory.SysBenchTest(language)
+					// Sysbench failed, try DD as final fallback
+					res = memory.DDTest(language)
+				}
+			}
+		case "winsat":
+			// Winsat is only supported on Windows
+			if language == "en" {
+				res = "Winsat is only supported on Windows, switching to STREAM for testing.\n"
+			} else {
+				res = "Winsat仅在Windows上支持，切换使用STREAM进行测试。\n"
+			}
+			res += memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "STREAM test failed, switching to Sysbench for testing.\n"
+				} else {
+					res = "STREAM测试失败，切换使用Sysbench进行测试。\n"
+				}
+				res += memory.SysBenchTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res = "Sysbench test failed, switching to DD for testing.\n"
+					} else {
+						res = "Sysbench测试失败，切换使用DD进行测试。\n"
+					}
+					res += memory.DDTest(language)
 				}
 			}
 		default:
