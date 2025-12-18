@@ -50,47 +50,124 @@ func main() {
 	if runtime.GOOS == "windows" {
 		switch testMethod {
 		case "stream":
-			if language == "en" {
-				res = "STREAM is not supported on Windows, using Winsat for testing.\n"
-			} else {
-				res = "Windows下不支持STREAM，使用Winsat进行测试。\n"
+			// stream → winsat → dd
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "STREAM test failed, switching to Winsat for testing.\n"
+				} else {
+					res = "STREAM测试失败，切换使用Winsat进行测试。\n"
+				}
+				res += memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res += "Winsat test failed, switching to DD for testing.\n"
+					} else {
+						res += "Winsat测试失败，切换使用DD进行测试。\n"
+					}
+					res += memory.WindowsDDTest(language)
+				}
 			}
-			res += memory.WinsatTest(language)
 		case "dd":
+			// dd → winsat → stream
 			res = memory.WindowsDDTest(language)
 			if res == "" || strings.TrimSpace(res) == "" {
 				if language == "en" {
-					res = "DD test failed, switching to STREAM for testing.\n"
+					res = "DD test failed, switching to Winsat for testing.\n"
 				} else {
-					res = "DD测试失败，切换使用STREAM进行测试。\n"
+					res = "DD测试失败，切换使用Winsat进行测试。\n"
+				}
+				res += memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res += "Winsat test failed, switching to STREAM for testing.\n"
+					} else {
+						res += "Winsat测试失败，切换使用STREAM进行测试。\n"
+					}
+					res += memory.StreamTest(language)
+				}
+			}
+		case "sysbench":
+			// sysbench → stream → winsat → dd (Windows不支持sysbench)
+			if language == "en" {
+				res = "Sysbench is not supported on Windows, switching to STREAM for testing.\n"
+			} else {
+				res = "Windows下不支持Sysbench，切换使用STREAM进行测试。\n"
+			}
+			res += memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res += "STREAM test failed, switching to Winsat for testing.\n"
+				} else {
+					res += "STREAM测试失败，切换使用Winsat进行测试。\n"
+				}
+				res += memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res += "Winsat test failed, switching to DD for testing.\n"
+					} else {
+						res += "Winsat测试失败，切换使用DD进行测试。\n"
+					}
+					res += memory.WindowsDDTest(language)
+				}
+			}
+		case "winsat":
+			// winsat → stream → dd (已经用过winsat，不再重复)
+			res = memory.WinsatTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "Winsat test failed, switching to STREAM for testing.\n"
+				} else {
+					res = "Winsat测试失败，切换使用STREAM进行测试。\n"
 				}
 				res += memory.StreamTest(language)
 				if res == "" || strings.TrimSpace(res) == "" {
 					if language == "en" {
-						res = "STREAM test failed, switching to Winsat for testing.\n"
+						res += "STREAM test failed, switching to DD for testing.\n"
 					} else {
-						res = "STREAM测试失败，切换使用Winsat进行测试。\n"
+						res += "STREAM测试失败，切换使用DD进行测试。\n"
 					}
-					res += memory.WinsatTest(language)
+					res += memory.WindowsDDTest(language)
 				}
 			}
-		case "sysbench":
-			if language == "en" {
-				res = "Sysbench is not supported on Windows, using Winsat for testing.\n"
-			} else {
-				res = "Windows下不支持Sysbench，使用Winsat进行测试。\n"
-			}
-			res += memory.WinsatTest(language)
-		default:
-			// For auto or winsat or any other method
-			if testMethod != "winsat" && testMethod != "auto" {
+		case "auto":
+			// auto → stream → winsat → dd
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
 				if language == "en" {
-					res = "Detected host is Windows, using Winsat for testing.\n"
+					res = "STREAM test failed, switching to Winsat for testing.\n"
 				} else {
-					res = "检测到主机为Windows，使用Winsat进行测试。\n"
+					res = "STREAM测试失败，切换使用Winsat进行测试。\n"
+				}
+				res += memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res += "Winsat test failed, switching to DD for testing.\n"
+					} else {
+						res += "Winsat测试失败，切换使用DD进行测试。\n"
+					}
+					res += memory.WindowsDDTest(language)
 				}
 			}
-			res += memory.WinsatTest(language)
+		default:
+			// 其他方法 → stream → winsat → dd
+			res = memory.StreamTest(language)
+			if res == "" || strings.TrimSpace(res) == "" {
+				if language == "en" {
+					res = "STREAM test failed, switching to Winsat for testing.\n"
+				} else {
+					res = "STREAM测试失败，切换使用Winsat进行测试。\n"
+				}
+				res += memory.WinsatTest(language)
+				if res == "" || strings.TrimSpace(res) == "" {
+					if language == "en" {
+						res += "Winsat test failed, switching to DD for testing.\n"
+					} else {
+						res += "Winsat测试失败，切换使用DD进行测试。\n"
+					}
+					res += memory.WindowsDDTest(language)
+				}
+			}
 		}
 	} else {
 		switch testMethod {
