@@ -1,40 +1,124 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	. "github.com/oneclickvirt/defaultset"
 	"github.com/oneclickvirt/memorytest/memory"
 )
 
-func main() {
-	go func() {
-		http.Get("https://hits.spiritlhl.net/memorytest.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
-	}()
-	fmt.Println(Green("Repo:"), Yellow("https://github.com/oneclickvirt/memorytest"))
-	var showVersion, help bool
-	var language, testMethod string
-	memorytestFlag := flag.NewFlagSet("cputest", flag.ContinueOnError)
-	memorytestFlag.BoolVar(&help, "h", false, "Show help information")
-	memorytestFlag.BoolVar(&showVersion, "v", false, "show version")
-	memorytestFlag.StringVar(&language, "l", "", "Language parameter (en or zh)")
-	memorytestFlag.StringVar(&testMethod, "m", "", "Specific Test Method (stream, dd, sysbench, winsat, or auto)")
-	memorytestFlag.BoolVar(&memory.EnableLoger, "log", false, "Enable logging")
-	memorytestFlag.Parse(os.Args[1:])
-	if help {
-		fmt.Printf("Usage: %s [options]\n", os.Args[0])
-		memorytestFlag.PrintDefaults()
-		return
+type cliOptions struct {
+	help, version, jsonOutput, log bool
+	language, testMethod           string
+	sizeBytes                      int64
+	iterations                     int
+	timeout                        time.Duration
+}
+
+func parseCLI(args []string) (cliOptions, error) {
+	opts := cliOptions{}
+	fs := newFlagSet(&opts, io.Discard)
+	if err := fs.Parse(args); err != nil {
+		return opts, err
 	}
-	if showVersion {
+	if opts.sizeBytes < 0 || opts.iterations < 0 || opts.timeout < 0 {
+		return opts, fmt.Errorf("size, iterations, and timeout must not be negative")
+	}
+	return opts, nil
+}
+
+func newFlagSet(opts *cliOptions, output io.Writer) *flag.FlagSet {
+	fs := flag.NewFlagSet("memorytest", flag.ContinueOnError)
+	fs.SetOutput(output)
+	fs.BoolVar(&opts.help, "h", false, "Show help information")
+	fs.BoolVar(&opts.version, "v", false, "show version")
+	fs.StringVar(&opts.language, "l", "", "Language parameter (en or zh)")
+	fs.StringVar(&opts.testMethod, "m", "", "Specific Test Method (stream, dd, sysbench, winsat, or auto)")
+	fs.BoolVar(&opts.log, "log", false, "Enable logging")
+	fs.BoolVar(&opts.jsonOutput, "json", false, "Print the Go structured memory result as JSON")
+	fs.BoolVar(&opts.jsonOutput, "structured", false, "Print the Go structured memory result as JSON")
+	fs.Int64Var(&opts.sizeBytes, "size", 0, "Structured working-set size in bytes")
+	fs.IntVar(&opts.iterations, "iterations", 0, "Structured benchmark iterations")
+	fs.DurationVar(&opts.timeout, "timeout", 0, "Structured benchmark timeout (for example 30s)")
+	return fs
+}
+
+func printCLIHelp(program string) {
+	fmt.Printf("Usage: %s [options]\n", program)
+	newFlagSet(&cliOptions{}, os.Stdout).PrintDefaults()
+}
+
+func selectCLIAction(opts cliOptions) string {
+	if opts.help {
+		return "help"
+	}
+	if opts.version {
+		return "version"
+	}
+	if opts.jsonOutput {
+		return "structured"
+	}
+	return "legacy"
+}
+
+func main() {
+	opts, err := parseCLI(os.Args[1:])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	memory.EnableLoger = opts.log
+	action := selectCLIAction(opts)
+	if action == "help" || action == "version" {
+		printLegacyHeader()
+		if action == "help" {
+			printCLIHelp(os.Args[0])
+			return
+		}
 		fmt.Println(memory.MemoryTestVersion)
 		return
 	}
+	if action == "structured" {
+		if strings.TrimSpace(opts.testMethod) != "" {
+			fmt.Fprintln(os.Stderr, "-m/--test-method is only supported by legacy output")
+			os.Exit(2)
+		}
+		config := memory.DefaultBenchmarkConfig()
+		if opts.sizeBytes > 0 {
+			config.WorkingSetBytes = int(min(opts.sizeBytes, int64(512<<20)))
+		}
+		if opts.iterations > 0 {
+			config.Iterations = opts.iterations
+		}
+		ctx := context.Background()
+		cancel := func() {}
+		if opts.timeout > 0 {
+			ctx, cancel = context.WithTimeout(ctx, opts.timeout)
+		}
+		result, runErr := memory.RunBenchmark(ctx, config)
+		cancel()
+		encoded, marshalErr := json.Marshal(result)
+		if marshalErr != nil {
+			fmt.Fprintln(os.Stderr, marshalErr)
+			return
+		}
+		fmt.Println(string(encoded))
+		if runErr != nil {
+			return
+		}
+		return
+	}
+	printLegacyHeader()
+	language, testMethod := opts.language, opts.testMethod
 	var res string
 	if language == "" {
 		language = "zh"
@@ -279,4 +363,11 @@ func main() {
 		fmt.Println("Press Enter to exit...")
 		fmt.Scanln()
 	}
+}
+
+func printLegacyHeader() {
+	go func() {
+		http.Get("https://hits.spiritlhl.net/memorytest.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
+	}()
+	fmt.Println(Green("Repo:"), Yellow("https://github.com/oneclickvirt/memorytest"))
 }
