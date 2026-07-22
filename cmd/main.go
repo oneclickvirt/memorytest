@@ -73,7 +73,7 @@ func selectCLIAction(opts cliOptions) string {
 func main() {
 	opts, err := parseCLI(os.Args[1:])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, sanitizeErrorText(err.Error()))
 		os.Exit(2)
 	}
 	memory.EnableLoger = opts.log
@@ -357,7 +357,7 @@ func main() {
 		}
 	}
 	fmt.Println("--------------------------------------------------")
-	fmt.Print(res)
+	fmt.Print(indentLegacyOutput(res))
 	fmt.Println("--------------------------------------------------")
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		fmt.Println("Press Enter to exit...")
