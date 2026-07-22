@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"testing"
+	"time"
 )
 
 func TestRunBenchmarkStructured(t *testing.T) {
@@ -21,5 +22,14 @@ func TestRunBenchmarkCanceled(t *testing.T) {
 	result, err := RunBenchmark(ctx, BenchmarkConfig{WorkingSetBytes: 1 << 20, Iterations: 1})
 	if err == nil || result.Status != BenchmarkCanceled {
 		t.Fatalf("status=%s err=%v", result.Status, err)
+	}
+}
+
+func TestRunBenchmarkDeadline(t *testing.T) {
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+	defer cancel()
+	result, err := RunBenchmark(ctx, DefaultBenchmarkConfig())
+	if err == nil || result.Status != BenchmarkTimeout || result.Error != "timeout" {
+		t.Fatalf("unexpected timeout result: result=%+v err=%v", result, err)
 	}
 }

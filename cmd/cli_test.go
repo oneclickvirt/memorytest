@@ -33,6 +33,31 @@ func TestParseCLIRejectsNegativeSize(t *testing.T) {
 	}
 }
 
+func TestParseCLIRejectsInvalidAndIgnoredOptions(t *testing.T) {
+	for _, args := range [][]string{
+		{"-l", "fr"},
+		{"-m", "unknown"},
+		{"--size", "1048576"},
+		{"--structured", "-m", "stream"},
+		{"--structured", "--size", "0"},
+		{"--structured", "--iterations", "21"},
+		{"--structured", "--timeout", "0s"},
+		{"unexpected"},
+	} {
+		if _, err := parseCLI(args); err == nil {
+			t.Fatalf("expected arguments %v to be rejected", args)
+		}
+	}
+}
+
+func TestParseCLIHelpAndVersionIgnoreOtherInvalidValues(t *testing.T) {
+	for _, args := range [][]string{{"-h", "-l", "fr"}, {"-v", "-m", "unknown"}} {
+		if _, err := parseCLI(args); err != nil {
+			t.Fatalf("help/version arguments %v returned %v", args, err)
+		}
+	}
+}
+
 func TestCLIActionPrioritizesHelpAndVersion(t *testing.T) {
 	if got := selectCLIAction(cliOptions{help: true, version: true, jsonOutput: true}); got != "help" {
 		t.Fatalf("help action = %q", got)

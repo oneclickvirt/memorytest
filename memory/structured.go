@@ -12,6 +12,7 @@ type BenchmarkStatus string
 const (
 	BenchmarkOK          BenchmarkStatus = "ok"
 	BenchmarkCanceled    BenchmarkStatus = "canceled"
+	BenchmarkTimeout     BenchmarkStatus = "timeout"
 	BenchmarkUnavailable BenchmarkStatus = "unavailable"
 )
 
@@ -66,7 +67,7 @@ func RunBenchmark(ctx context.Context, config BenchmarkConfig) (result Benchmark
 		}
 	}()
 	if err := ctx.Err(); err != nil {
-		result.Status, result.Error = BenchmarkCanceled, err.Error()
+		result.Status, result.Error = benchmarkStop(err)
 		return result, err
 	}
 	count := max(config.WorkingSetBytes/8, 1024)
@@ -147,9 +148,18 @@ func timeOperation(ctx context.Context, iterations int, operation func()) (time.
 }
 
 func canceledMemoryResult(result BenchmarkResult, err error) (BenchmarkResult, error) {
-	result.Status = BenchmarkCanceled
-	result.Error = err.Error()
+	result.Status, result.Error = benchmarkStop(err)
 	return result, err
+}
+
+func benchmarkStop(err error) (BenchmarkStatus, string) {
+	if errors.Is(err, context.Canceled) {
+		return BenchmarkCanceled, "canceled"
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return BenchmarkTimeout, "timeout"
+	}
+	return BenchmarkUnavailable, "benchmark_failed"
 }
 
 func megabytesPerSecond(bytes float64, duration time.Duration) float64 {

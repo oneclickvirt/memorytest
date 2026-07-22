@@ -22,6 +22,9 @@ type cliOptions struct {
 	sizeBytes                      int64
 	iterations                     int
 	timeout                        time.Duration
+	languageSet, methodSet         bool
+	sizeSet, iterationsSet         bool
+	timeoutSet                     bool
 }
 
 func parseCLI(args []string) (cliOptions, error) {
@@ -30,8 +33,55 @@ func parseCLI(args []string) (cliOptions, error) {
 	if err := fs.Parse(args); err != nil {
 		return opts, err
 	}
-	if opts.sizeBytes < 0 || opts.iterations < 0 || opts.timeout < 0 {
-		return opts, fmt.Errorf("size, iterations, and timeout must not be negative")
+	if fs.NArg() != 0 {
+		return opts, fmt.Errorf("unexpected positional arguments: %s", strings.Join(fs.Args(), " "))
+	}
+	fs.Visit(func(current *flag.Flag) {
+		switch current.Name {
+		case "l":
+			opts.languageSet = true
+		case "m":
+			opts.methodSet = true
+		case "size":
+			opts.sizeSet = true
+		case "iterations":
+			opts.iterationsSet = true
+		case "timeout":
+			opts.timeoutSet = true
+		}
+	})
+	opts.language = strings.ToLower(strings.TrimSpace(opts.language))
+	opts.testMethod = strings.ToLower(strings.TrimSpace(opts.testMethod))
+	if opts.help || opts.version {
+		return opts, nil
+	}
+	if opts.language != "" && opts.language != "en" && opts.language != "zh" {
+		return opts, fmt.Errorf("language must be en or zh")
+	}
+	switch opts.testMethod {
+	case "", "auto", "stream", "dd", "sysbench":
+	case "winsat":
+		if runtime.GOOS != "windows" {
+			return opts, fmt.Errorf("winsat is only supported on Windows")
+		}
+	default:
+		return opts, fmt.Errorf("unsupported memory test method")
+	}
+	if opts.jsonOutput {
+		if opts.languageSet || opts.methodSet {
+			return opts, fmt.Errorf("-l and -m are not used with structured output")
+		}
+		if opts.sizeSet && (opts.sizeBytes <= 0 || opts.sizeBytes > 512<<20) {
+			return opts, fmt.Errorf("structured size must be greater than zero and at most 512 MiB")
+		}
+		if opts.iterationsSet && (opts.iterations <= 0 || opts.iterations > 20) {
+			return opts, fmt.Errorf("structured iterations must be between 1 and 20")
+		}
+		if opts.timeoutSet && opts.timeout <= 0 {
+			return opts, fmt.Errorf("structured timeout must be positive")
+		}
+	} else if opts.sizeSet || opts.iterationsSet || opts.timeoutSet {
+		return opts, fmt.Errorf("-size, -iterations, and -timeout require structured output")
 	}
 	return opts, nil
 }
@@ -88,10 +138,6 @@ func main() {
 		return
 	}
 	if action == "structured" {
-		if strings.TrimSpace(opts.testMethod) != "" {
-			fmt.Fprintln(os.Stderr, "-m/--test-method is only supported by legacy output")
-			os.Exit(2)
-		}
 		config := memory.DefaultBenchmarkConfig()
 		if opts.sizeBytes > 0 {
 			config.WorkingSetBytes = int(min(opts.sizeBytes, int64(512<<20)))
@@ -113,7 +159,7 @@ func main() {
 		}
 		fmt.Println(string(encoded))
 		if runErr != nil {
-			return
+			os.Exit(1)
 		}
 		return
 	}
@@ -356,9 +402,9 @@ func main() {
 			res = "Unsupported test method"
 		}
 	}
-	fmt.Println("--------------------------------------------------")
+	fmt.Println(" --------------------------------------------------")
 	fmt.Print(indentLegacyOutput(res))
-	fmt.Println("--------------------------------------------------")
+	fmt.Println(" --------------------------------------------------")
 	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
 		fmt.Println("Press Enter to exit...")
 		fmt.Scanln()
@@ -369,5 +415,5 @@ func printLegacyHeader() {
 	go func() {
 		http.Get("https://hits.spiritlhl.net/memorytest.svg?action=hit&title=Hits&title_bg=%23555555&count_bg=%230eecf8&edge_flat=false")
 	}()
-	fmt.Println(Green("Repo:"), Yellow("https://github.com/oneclickvirt/memorytest"))
+	fmt.Println(" "+Green("Repo:"), Yellow("https://github.com/oneclickvirt/memorytest"))
 }
