@@ -4,8 +4,8 @@
   "mcp": true,
   "files": {
     "agent/profile.json": "e583fa6fcc64adbc376c263e924737f17a1dced3920d02dbbbea8150ae90abc6",
-    "skills/oneclickvirt-memorytest/SKILL.md": "8c815912608d55cb73fc0ba8324400edee9a21bc36dfa78fb29e69d84ed3c0c7",
-    "skills/oneclickvirt-memorytest/SKILL_ZH.md": "f2e049b2cd5c39c441e339a858af511e9b6c44d2ba5b74e09b4733b5468c2ee8",
-    "agent/server.py": "c54981973f8d98e6eada6e0442f3d7e5c9296947706c2c5d33b80b7f9a1c9b5b"
+    "skills/oneclickvirt-memorytest/SKILL.md": "200eeb6b99c8285f594fa559e4de579e938448ed348f4ab8502340916dbf0605",
+    "skills/oneclickvirt-memorytest/SKILL_ZH.md": "a0c0fbaa07a2dc536f2e95237ba2b771e44eb3f7c14fd5ee8a01bd09cc937825",
+    "agent/server.py": "f4fe673f355a9b8ab06b4f8c1f90251e0ad79e1d9324ee4d62eff5e12ac45b74"
   }
 }
