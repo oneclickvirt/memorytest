@@ -1,0 +1,11 @@
+{
+  "repository": "oneclickvirt/memorytest",
+  "skill_name": "oneclickvirt-memorytest",
+  "mcp": true,
+  "files": {
+    "agent/profile.json": "e583fa6fcc64adbc376c263e924737f17a1dced3920d02dbbbea8150ae90abc6",
+    "skills/oneclickvirt-memorytest/SKILL.md": "8c815912608d55cb73fc0ba8324400edee9a21bc36dfa78fb29e69d84ed3c0c7",
+    "skills/oneclickvirt-memorytest/SKILL_ZH.md": "f2e049b2cd5c39c441e339a858af511e9b6c44d2ba5b74e09b4733b5468c2ee8",
+    "agent/server.py": "d01416e6194095d90bf0d49ea29f7122969f0b74cf4d74ed0b1ce78753423a7d"
+  }
+}
